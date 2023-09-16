@@ -9,3 +9,6 @@ criterion = "0.5.1"
 [[bench]]
 name = "bench"
 harness = false
+
+[dependencies]
+num_enum = "0.7.0"

@@ -1,2 +1,2 @@
-pub mod chess2;
+pub mod chess;
 pub mod bit;
