@@ -11,4 +11,5 @@ name = "bench"
 harness = false
 
 [dependencies]
+ary = "0.1.0"
 num_enum = "0.7.0"

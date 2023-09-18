@@ -1,8 +1,7 @@
 mod util;
 
 
-use crate::util::chess3::*;
-use crate::util::bit::*;
+
 pub fn construct_bitmask_from_vec(v: &Vec<u8>){
 
 }
@@ -37,8 +36,17 @@ fn main() {
   // let queen_offsets = Vec::new().append(rook_offsets.clone());
 
   // println!("{:?}", rook_offsets.0);
-
-  let t:u64 = 0b0001000000001000000001000000001000000000000000000000000000000000;
   
-  select_bit_with_rank(vo, ro)
+  print_board()
+    
+}
+
+
+fn print_board(){
+  for x in (0..8){
+    for y in (0..8){
+      print!("{:3?}", 8*x + y);
+    }
+    print!("\n");
+  }
 }

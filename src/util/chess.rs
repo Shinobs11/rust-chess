@@ -22,8 +22,10 @@ enum Piece {
   Empty = 12
 }
 
+const WHITE_PIECES:[Piece; 6] = [Piece::WKing, Piece::WQueen, Piece::WRook, Piece::WBishop, Piece::WKnight, Piece::WPawn];
+const BLACK_PIECES:[Piece; 6] = [Piece::BKing, Piece::BQueen, Piece::BRook, Piece::BBishop, Piece::BKnight, Piece::BPawn];
 
-const default_board:[u8; 64] = [
+const DEFAULT_BOARD:[Piece; 64] = [
   Piece::BRook, Piece::BKnight, Piece::BBishop, Piece::BQueen, Piece::BKing, Piece::BBishop, Piece::BKnight, Piece::BRook,
   Piece::BPawn, Piece::BPawn, Piece::BPawn, Piece::BPawn, Piece::BPawn, Piece::BPawn, Piece::BPawn, Piece::BPawn,
   Piece::Empty, Piece::Empty, Piece::Empty, Piece::Empty, Piece::Empty, Piece::Empty, Piece::Empty, Piece::Empty,
@@ -32,7 +34,8 @@ const default_board:[u8; 64] = [
   Piece::Empty, Piece::Empty, Piece::Empty, Piece::Empty, Piece::Empty, Piece::Empty, Piece::Empty, Piece::Empty,
   Piece::WPawn, Piece::WPawn, Piece::WPawn, Piece::WPawn, Piece::WPawn, Piece::WPawn, Piece::WPawn, Piece::WPawn,
   Piece::WRook, Piece::WKnight, Piece::WBishop, Piece::WQueen, Piece::WKing, Piece::WBishop, Piece::WKnight, Piece::WRook
-].map(|p: Piece| p as u8);
+];
+
 
 
 
@@ -66,7 +69,7 @@ pub struct PieceSet {
   w_knight:Vec<u8>,
   b_knight:Vec<u8>,
   w_pawn:Vec<u8>,
-  b_pawn:Vec<u8>
+  b_pawn:Vec<u8>,
 }
 impl Default for PieceSet{
   fn default() -> Self {
@@ -82,7 +85,7 @@ impl Default for PieceSet{
         w_knight: vec![62, 57],
         b_knight: vec![1, 6],
         w_pawn: vec![47, 48, 49, 50, 51, 52, 53, 54,],
-        b_pawn: vec![8, 9, 10, 11, 12, 13, 14, 15]
+        b_pawn: vec![8, 9, 10, 11, 12, 13, 14, 15],
       }
   }
 }
@@ -102,7 +105,7 @@ impl Index<Piece> for PieceSet {
           Piece::BBishop => &self.b_bishop,
           Piece::BKnight => &self.b_knight,
           Piece::BPawn => &self.b_pawn,
-          Piece::Empty => &vec![65]
+          Piece::Empty => unimplemented!()
       }
   }
 }
@@ -121,10 +124,12 @@ impl IndexMut<Piece> for PieceSet {
           Piece::BBishop => &mut self.b_bishop,
           Piece::BKnight => &mut self.b_knight,
           Piece::BPawn => &mut self.b_pawn,
-          Piece::Empty => &mut vec![65]
+          Piece::Empty => unimplemented!()
       }
   }
 }
+
+
 
 pub struct Move {
   from: usize,
@@ -132,70 +137,98 @@ pub struct Move {
 }
 
 pub struct Board {
-  sq: [u8; 64],
-  pieces: [u8; 32],
+  sq: [i8; 64],
+  piece_set: PieceSet,
   castle_state: [bool; 4],
-  en_pessant_sq: u8,
-  turn: u8, // 0: white, 1: black
-  draw_count: u8 
+  en_pessant_sq: i8,
+  turn: i8, // 0: white, 1: black
+  draw_count: i8 
 }
 impl Default for Board {
   fn default() -> Self {
-    Board {sq:[0; 64], pieces:[0; 32], castle_state: [true; 4], en_pessant_sq: 64, turn: 0, draw_count: 0}
+    Board {sq:[0; 64], piece_set:PieceSet::default(), castle_state: [true; 4], en_pessant_sq: 64, turn: 0, draw_count: 0}
   }
 }
 
-const KING_OFFSETS: (i32, i32, i32, i32, i32, i32, i32, i32) = 
-                    (-9, -8, -7, 
-                     -1,      1,
-                      7,  8,  9);
+
+
+
+//TODOS: Refactor this section      
+const WHITE_DISCOVERED_ATTACK_PIECES:[Piece; 3] = [Piece::WQueen, Piece::WRook, Piece::WBishop];
+const BLACK_DISCOVERED_ATTACK_PIECES:[Piece; 3] = [Piece::BQueen, Piece::BRook, Piece::BBishop];
+fn does_move_leave_king_in_check(mut b: Board, m: Move)->bool {
+
+  let opposing_pieces = if b.turn == 1 {WHITE_DISCOVERED_ATTACK_PIECES} else {BLACK_DISCOVERED_ATTACK_PIECES};
+  let king_pos = if b.turn == 1 {b.piece_set.b_king[0]} else {b.piece_set.w_king[0]};
+  
+  //the only pieces we need to check are bishops, rooks and queens.
+  //diagonal moves either change position by a multiple of 9 or 6
+  
+  for bishop_pos in b.piece_set[opposing_pieces[2]] {
+    let diff = (king_pos - bishop_pos);
+    if (diff % 7 == 0) {
+      if (diff >= 0) {
+        
+      }
+    }
+
+  }
+  for rook_pos in b.piece_set[opposing_pieces[1]] {
+
+
+  }
+  for queen_pos in b.piece_set[opposing_pieces[0]] {
+
+
+  }
 
 
 
 
-
-fn check_for_check(mut b: Board, m: Move, p: u8)->bool {
 
 
 }
 
-fn non_king_check_for_check(mut b: Board, m: Move, p: u8)->bool{
-  b.sq[m.from] = Piece::Empty as u8;
+fn non_king_does_move_leave_king_in_check(mut b: Board, m: Move, p: i8)->bool{
+  b.sq[m.from] = Piece::Empty as i8;
+  let tmp = b.sq[m.to];
+  b.sq[m.to] = p;
 
 
 
+  b.sq[m.to] = tmp;
   b.sq[m.from] = p;
   return true;
 }
-fn king_check_for_check(mut b: Board, m: Move, p: u8)->bool {
+fn king_does_move_leave_king_in_check(mut b: Board, m: Move, p: i8)->bool {
 
   return true;
 }
 
-fn is_legal_move_king(mut b: Board, m: Move, p: u8)->bool{
+fn is_legal_move_king(mut b: Board, m: Move, p: i8)->bool{
   
   return true;
 }
-fn is_legal_move_queen(mut b: Board, m: Move, p: u8)->bool{
+fn is_legal_move_queen(mut b: Board, m: Move, p: i8)->bool{
   return true;
 }
-fn is_legal_move_rook(mut b: Board, m: Move, p: u8)->bool{
+fn is_legal_move_rook(mut b: Board, m: Move, p: i8)->bool{
   return true
 }
-fn is_legal_move_bishop(mut b: Board, m: Move, p: u8)->bool{
+fn is_legal_move_bishop(mut b: Board, m: Move, p: i8)->bool{
   return true;
 }
-fn is_legal_move_knight(mut b: Board, m: Move, p: u8)->bool{
+fn is_legal_move_knight(mut b: Board, m: Move, p: i8)->bool{
   return true;
 }
-fn is_legal_move_pawn(mut b: Board, m: Move, p: u8)->bool{
+fn is_legal_move_pawn(mut b: Board, m: Move, p: i8)->bool{
   return true;
 }
 
 
 pub fn is_legal_move(mut b: Board, m: Move)->bool{
   let piece = b.sq[m.from];
-  if (piece % 2 != b.turn) || (piece != (Piece::Empty as u8)){
+  if (piece % 2 != b.turn) || (piece != (Piece::Empty as i8)){
     return false;
   }
 
