@@ -1,6 +1,6 @@
 mod util;
 
-
+use util::chess::*;
 
 pub fn construct_bitmask_from_vec(v: &Vec<u8>){
 
@@ -8,7 +8,7 @@ pub fn construct_bitmask_from_vec(v: &Vec<u8>){
 
 
 fn main() {
-  // let s = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+  let s = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
   // let test = FENToBitBoard(s.to_string());
   // println!("{}", printBitBoard(test.w_pawn, false));
   
@@ -36,6 +36,20 @@ fn main() {
   // let queen_offsets = Vec::new().append(rook_offsets.clone());
 
   // println!("{:?}", rook_offsets.0);
+
+
+
+
+  let b = Board::default();
+  
+  let bb = board_from_fen(s.to_string());
+  
+
+  let arr = [0; 64];
+  println!("{}", bb.to_string());
+
+
+
   
   print_board()
     
