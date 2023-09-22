@@ -1,5 +1,5 @@
 
-use std::fmt::Display;
+
 use std::{str::*, slice::Chunks};
 
 use std::iter::*;
@@ -15,87 +15,49 @@ use crate::util::types::*;
 
 
 
-pub struct Board {
-  pub sq: [u8; 64],
-  pub piece_set: PieceSet,
-  pub castle_state: [bool; 4],
-  pub en_pessant_sq: u8,
-  pub turn: u8, // 0: white, 1: black
-  pub draw_count: u8 
+
+
+fn mov(b: &mut Board, m: Move){
+
 }
-impl Board {
-  fn empty_default() -> Self {
-    Board { 
-      sq:[0;64], 
-      piece_set: PieceSet::empty_default(), 
-      castle_state: [true; 4], 
-      en_pessant_sq: 64, 
-      turn: 0, 
-      draw_count: 0 
-    }
+fn move_str(b: &mut Board, s: String){
+  let p:Vec<char> = vec!['K', 'Q', 'R', 'B', 'N'];
+  let is_last_char_check = s.chars().rev().next().unwrap() == '+';
+  let is_takes = s.contains('x');
+  let mut m = Move::default();
+  if s.contains('0') {
+    m.kind = 0;
+    m.arg1 = (s.chars().fold(0, |acc, c| acc + (c=='0') as u8) == 3) as u8;
+    mov(b, m);
+    return;
   }
-  fn mov(&mut self, m: Move){
+  let first = s.chars().nth(0).unwrap();
+  if first.is_ascii_uppercase() {
+    match first {
+      'K' => {
+        //we can safely assume there's only ever going to be one king
+        m.arg1 = b.piece_set[Piece::from_primitive(b.turn)][0];
+      }
+      'Q' => {
+        
+      }
+      'R' => {
 
-  }
-  fn move_str(&mut self, s: String){
-    let p:Vec<char> = vec!['K', 'Q', 'R', 'B', 'N'];
-    let is_last_char_check = s.chars().rev().next().unwrap() == '+';
-    let mut m = Move::default();
-    if s.contains('0') {
-      m.kind = 0;
-      m.arg1 = (s.chars().fold(0, |acc, c| acc + (c=='0') as u8) == 3) as u8;
-      self.mov(m);
-      return;
-    }
-    let first = s.chars().nth(0).unwrap();
-    if first.is_ascii_uppercase() {
-      match first {
-        'K' => {
-          //we can safely assume there's only ever going to be one king
-          m.arg1 = self.piece_set[Piece::from_primitive(self.turn)][0]
-        }
-        'Q' => {
-                    
-        }
-        'R' => {
+      }
+      'B' => {
 
-        }
-        'B' => {
+      }
+      'N' => {
 
-        }
-        'N' => {
-
-        }
       }
     }
-
-
-
-
   }
 
+
+
+
+
 }
-impl Default for Board {
-  fn default() -> Self {
-    Board {sq:DEFAULT_BOARD.map(|x|x as u8), piece_set:PieceSet::default(), castle_state: [true; 4], en_pessant_sq: 64, turn: 0, draw_count: 0}
-  }
-}
-
-impl Display for Board {
-  fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-      let mut sq_str = String::new();
-      for i in (0..8){
-        for j in (0..8){
-          sq_str.push(PIECE_CHAR_MAP[self.sq[i*8 + j] as usize]);
-        }
-        sq_str.push('\n');
-      }
-
-      return write!(f, "{}\n{}\n{}\n{}\n{}\n",sq_str, "null", "null", "null", "null");
-  }
-}
-
-
 
 
 //TODOS: Refactor this section      
@@ -146,68 +108,83 @@ fn does_move_leave_king_in_check(mut b: Board, m: Move)->bool {
 
 
 
+fn find_queen_attack(b:&mut Board, target:u8)->i8{
+  for queen in b.piece_set[Piece::from_primitive(2 + b.turn)].iter() {
+    let diff:i8 = target as i8 - *queen as i8;
+    if diff % 8 == 0 {
+      let div_8 = 
+    }
+
+  }
 
 
+  return -1;
 
-#[inline(always)]
-fn non_king_does_move_leave_king_in_check(mut b: Board, m: Move, p: u8)->bool{
-  b.sq[m.from] = Piece::Empty as u8;
-  let tmp = b.sq[m.to];
-  b.sq[m.to] = p;
-
-
-
-  b.sq[m.to] = tmp;
-  b.sq[m.from] = p;
-  return true;
 }
-#[inline(always)]
-fn king_does_move_leave_king_in_check(mut b: Board, m: Move, p: u8)->bool {
 
-  return true;
-}
-#[inline(always)]
-fn is_legal_move_king(mut b: Board, m: Move, p: u8)->bool{
+
+
+
+
+// #[inline(always)]
+// fn non_king_does_move_leave_king_in_check(mut b: Board, m: Move, p: u8)->bool{
+//   b.sq[m.from] = Piece::Empty as u8;
+//   let tmp = b.sq[m.to];
+//   b.sq[m.to] = p;
+
+
+
+//   b.sq[m.to] = tmp;
+//   b.sq[m.from] = p;
+//   return true;
+// }
+// #[inline(always)]
+// fn king_does_move_leave_king_in_check(mut b: Board, m: Move, p: u8)->bool {
+
+//   return true;
+// }
+// #[inline(always)]
+// fn is_legal_move_king(mut b: Board, m: Move, p: u8)->bool{
   
-  return true;
-}
-#[inline(always)]
-fn is_legal_move_queen(mut b: Board, m: Move, p: u8)->bool{
-  return true;
-}
-#[inline(always)]
-fn is_legal_move_rook(mut b: Board, m: Move, p: u8)->bool{
-  return true
-}
-#[inline(always)]
-fn is_legal_move_bishop(mut b: Board, m: Move, p: u8)->bool{
-  return true;
-}
-#[inline(always)]
-fn is_legal_move_knight(mut b: Board, m: Move, p: u8)->bool{
-  return true;
-}
-#[inline(always)]
-fn is_legal_move_pawn(mut b: Board, m: Move, p: u8)->bool{
-  return true;
-}
+//   return true;
+// }
+// #[inline(always)]
+// fn is_legal_move_queen(mut b: Board, m: Move, p: u8)->bool{
+//   return true;
+// }
+// #[inline(always)]
+// fn is_legal_move_rook(mut b: Board, m: Move, p: u8)->bool{
+//   return true
+// }
+// #[inline(always)]
+// fn is_legal_move_bishop(mut b: Board, m: Move, p: u8)->bool{
+//   return true;
+// }
+// #[inline(always)]
+// fn is_legal_move_knight(mut b: Board, m: Move, p: u8)->bool{
+//   return true;
+// }
+// #[inline(always)]
+// fn is_legal_move_pawn(mut b: Board, m: Move, p: u8)->bool{
+//   return true;
+// }
 
 
-pub fn is_legal_move(mut b: Board, m: Move)->bool{
-  let piece = b.sq[m.from];
-  if (piece % 2 != b.turn) || (piece != (Piece::Empty as u8)){
-    return false;
-  }
+// pub fn is_legal_move(mut b: Board, m: Move)->bool{
+//   let piece = b.sq[m.from];
+//   if (piece % 2 != b.turn) || (piece != (Piece::Empty as u8)){
+//     return false;
+//   }
 
-  match piece {
-    _ if piece < 2 => return is_legal_move_king(b, m, piece),
-    _ if piece < 4 => return is_legal_move_queen(b, m, piece),
-    _ if piece < 6 => return is_legal_move_rook(b, m, piece),
-    _ if piece < 8 => return is_legal_move_bishop(b, m, piece),
-    _ if piece < 10 => return is_legal_move_knight(b, m, piece),
-    _ => return is_legal_move_pawn(b, m, piece)
-  }
-}
+//   match piece {
+//     _ if piece < 2 => return is_legal_move_king(b, m, piece),
+//     _ if piece < 4 => return is_legal_move_queen(b, m, piece),
+//     _ if piece < 6 => return is_legal_move_rook(b, m, piece),
+//     _ if piece < 8 => return is_legal_move_bishop(b, m, piece),
+//     _ if piece < 10 => return is_legal_move_knight(b, m, piece),
+//     _ => return is_legal_move_pawn(b, m, piece)
+//   }
+// }
 
 
 pub fn board_from_fen(fen: String)->Board{
@@ -218,7 +195,7 @@ pub fn board_from_fen(fen: String)->Board{
 
   fn set_pos(b: &mut Board, piece: u8, idx: &mut u8){
     b.sq[*idx as usize] = piece;
-    b.piece_set[Piece::try_from_primitive(piece).unwrap()].push(*idx);
+    b.piece_set[Piece::from_primitive(piece)].push(*idx);
     *idx += 1;
   }
 

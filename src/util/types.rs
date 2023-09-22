@@ -1,4 +1,5 @@
 use crate::util::consts::*;
+use std::fmt::Display;
 use std::ops::{Index, IndexMut};
 pub struct PieceSet {
   pub w_king:Vec<u8>,
@@ -90,7 +91,47 @@ impl IndexMut<Piece> for PieceSet {
   }
 }
 
+pub struct Board {
+  pub sq: [u8; 64],
+  pub piece_set: PieceSet,
+  pub castle_state: [bool; 4],
+  pub en_pessant_sq: u8,
+  pub turn: u8, // 0: white, 1: black
+  pub draw_count: u8 
+}
+impl Board {
+  pub fn empty_default() -> Self {
+    Board { 
+      sq:[0;64], 
+      piece_set: PieceSet::empty_default(), 
+      castle_state: [true; 4], 
+      en_pessant_sq: 255, 
+      turn: 0, 
+      draw_count: 0 
+    }
+  }
+  
 
+}
+impl Default for Board {
+  fn default() -> Self {
+    Board {sq:DEFAULT_BOARD.map(|x|x as u8), piece_set:PieceSet::default(), castle_state: [true; 4], en_pessant_sq: 255, turn: 0, draw_count: 0}
+  }
+}
+
+impl Display for Board {
+  fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+      let mut sq_str = String::new();
+      for i in (0..8){
+        for j in (0..8){
+          sq_str.push(PIECE_CHAR_MAP[self.sq[i*8 + j] as usize]);
+        }
+        sq_str.push('\n');
+      }
+
+      return write!(f, "{}\n{}\n{}\n{}\n{}\n",sq_str, "null", "null", "null", "null");
+  }
+}
 
 pub struct Move {
   //0 = normal move, 1 = castle, 2 = en pessant

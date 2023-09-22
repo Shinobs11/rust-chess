@@ -18,6 +18,19 @@ pub enum Piece {
   Empty = 12
 }
 
+#[derive(IntoPrimitive, FromPrimitive)]
+#[repr(u8)]
+pub enum GenericPiece {
+  King = 0,
+  Queen = 1,
+  Rook = 2,
+  Bishop = 3,
+  Knight = 4,
+  Pawn = 5,
+  #[num_enum(default)]
+  Empty = 6
+}
+
 
 pub const PIECE_CHAR_MAP:[char; 13] = ['K', 'k', 'Q', 'q', 'R', 'r', 'B', 'b', 'N', 'n', 'P', 'p', '#'];
 
@@ -51,4 +64,5 @@ pub const default_pieces:[u8;32] = [
   1, 6, //black knights
   8, 9, 10, 11, 12, 13, 14, 15 //black pawns
 ];
+
 
