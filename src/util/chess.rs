@@ -1,163 +1,19 @@
 
 use std::fmt::Display;
 use std::{str::*, slice::Chunks};
-use std::ops::{Index, IndexMut};
+
 use std::iter::*;
 use std::collections::HashMap;
-use num_enum::{IntoPrimitive, TryFromPrimitive};
-#[derive(IntoPrimitive, TryFromPrimitive)]
-#[repr(u8)]
-enum Piece {
-  WKing = 0,
-  BKing = 1,
-  WQueen = 2,
-  BQueen = 3,
-  WRook = 4,
-  BRook = 5,
-  WBishop = 6,
-  BBishop = 7,
-  WKnight = 8,
-  BKnight = 9,
-  WPawn = 10,
-  BPawn = 11,
-  Empty = 12
-}
 
 
-const PIECE_CHAR_MAP:[char; 13] = ['K', 'k', 'Q', 'q', 'R', 'r', 'B', 'b', 'N', 'n', 'P', 'p', '#'];
+use num_enum::{TryFromPrimitive, FromPrimitive};
 
-
-const WHITE_PIECES:[Piece; 6] = [Piece::WKing, Piece::WQueen, Piece::WRook, Piece::WBishop, Piece::WKnight, Piece::WPawn];
-const BLACK_PIECES:[Piece; 6] = [Piece::BKing, Piece::BQueen, Piece::BRook, Piece::BBishop, Piece::BKnight, Piece::BPawn];
-
-const DEFAULT_BOARD:[Piece; 64] = [
-  Piece::BRook, Piece::BKnight, Piece::BBishop, Piece::BQueen, Piece::BKing, Piece::BBishop, Piece::BKnight, Piece::BRook,
-  Piece::BPawn, Piece::BPawn, Piece::BPawn, Piece::BPawn, Piece::BPawn, Piece::BPawn, Piece::BPawn, Piece::BPawn,
-  Piece::Empty, Piece::Empty, Piece::Empty, Piece::Empty, Piece::Empty, Piece::Empty, Piece::Empty, Piece::Empty,
-  Piece::Empty, Piece::Empty, Piece::Empty, Piece::Empty, Piece::Empty, Piece::Empty, Piece::Empty, Piece::Empty,
-  Piece::Empty, Piece::Empty, Piece::Empty, Piece::Empty, Piece::Empty, Piece::Empty, Piece::Empty, Piece::Empty,
-  Piece::Empty, Piece::Empty, Piece::Empty, Piece::Empty, Piece::Empty, Piece::Empty, Piece::Empty, Piece::Empty,
-  Piece::WPawn, Piece::WPawn, Piece::WPawn, Piece::WPawn, Piece::WPawn, Piece::WPawn, Piece::WPawn, Piece::WPawn,
-  Piece::WRook, Piece::WKnight, Piece::WBishop, Piece::WQueen, Piece::WKing, Piece::WBishop, Piece::WKnight, Piece::WRook
-];
+use crate::util::consts::*;
+use crate::util::types::*;
 
 
 
 
-
-const default_pieces:[u8;32] = [
-  60, //white king
-  59, //white queen
-  63, 56, //white rooks
-  61, 58, //white bishops
-  62, 57, //white knights
-  47, 48, 49, 50, 51, 52, 53, 54, //white pawns
-  4, //black king
-  3, //black queen
-  0, 7, //black rooks
-  2, 5, //black bishops
-  1, 6, //black knights
-  8, 9, 10, 11, 12, 13, 14, 15 //black pawns
-];
-
-
-
-pub struct PieceSet {
-  w_king:Vec<u8>,
-  b_king:Vec<u8>,
-  w_queen:Vec<u8>,
-  b_queen:Vec<u8>,
-  w_rook:Vec<u8>,
-  b_rook:Vec<u8>,
-  w_bishop:Vec<u8>,
-  b_bishop:Vec<u8>,
-  w_knight:Vec<u8>,
-  b_knight:Vec<u8>,
-  w_pawn:Vec<u8>,
-  b_pawn:Vec<u8>,
-}
-impl PieceSet {
-  fn empty_default() -> Self {
-    return PieceSet {
-      w_king: vec![], 
-      b_king: vec![], 
-      w_queen: vec![], 
-      b_queen: vec![], 
-      w_rook: vec![], 
-      b_rook: vec![], 
-      w_bishop: vec![], 
-      b_bishop: vec![], 
-      w_knight: vec![], 
-      b_knight: vec![], 
-      w_pawn: vec![], 
-      b_pawn: vec![] 
-    }
-  }
-}
-impl Default for PieceSet{
-  fn default() -> Self {
-      return PieceSet {
-        w_king: vec![60],
-        b_king: vec![4],
-        w_queen: vec![59],
-        b_queen: vec![3],
-        w_rook: vec![63, 56],
-        b_rook: vec![0, 7],
-        w_bishop: vec![61, 58],
-        b_bishop: vec![2, 5],
-        w_knight: vec![62, 57],
-        b_knight: vec![1, 6],
-        w_pawn: vec![47, 48, 49, 50, 51, 52, 53, 54,],
-        b_pawn: vec![8, 9, 10, 11, 12, 13, 14, 15],
-      }
-  }
-}
-impl Index<Piece> for PieceSet {
-  type Output = Vec<u8>;
-  fn index(&self, index: Piece) -> &Self::Output {
-      match index {
-          Piece::WKing => &self.w_king,
-          Piece::WQueen => &self.w_queen,
-          Piece::WRook => &self.w_rook,
-          Piece::WBishop => &self.w_bishop,
-          Piece::WKnight => &self. w_knight,
-          Piece::WPawn => &self.w_pawn,
-          Piece::BKing => &self.b_king,
-          Piece::BQueen => &self.b_queen,
-          Piece::BRook => &self.b_rook,
-          Piece::BBishop => &self.b_bishop,
-          Piece::BKnight => &self.b_knight,
-          Piece::BPawn => &self.b_pawn,
-          Piece::Empty => unimplemented!()
-      }
-  }
-}
-impl IndexMut<Piece> for PieceSet {
-  fn index_mut(&mut self, index: Piece) -> &mut Self::Output {
-      match index {
-          Piece::WKing => &mut self.w_king,
-          Piece::WQueen => &mut self.w_queen,
-          Piece::WRook => &mut self.w_rook,
-          Piece::WBishop => &mut self.w_bishop,
-          Piece::WKnight => &mut self. w_knight,
-          Piece::WPawn => &mut self.w_pawn,
-          Piece::BKing => &mut self.b_king,
-          Piece::BQueen => &mut self.b_queen,
-          Piece::BRook => &mut self.b_rook,
-          Piece::BBishop => &mut self.b_bishop,
-          Piece::BKnight => &mut self.b_knight,
-          Piece::BPawn => &mut self.b_pawn,
-          Piece::Empty => unimplemented!()
-      }
-  }
-}
-
-
-
-pub struct Move {
-  from: usize,
-  to: usize
-}
 
 pub struct Board {
   pub sq: [u8; 64],
@@ -178,20 +34,44 @@ impl Board {
       draw_count: 0 
     }
   }
+  fn mov(&mut self, m: Move){
+
+  }
   fn move_str(&mut self, s: String){
     let p:Vec<char> = vec!['K', 'Q', 'R', 'B', 'N'];
     let is_last_char_check = s.chars().rev().next().unwrap() == '+';
-
+    let mut m = Move::default();
     if s.contains('0') {
-      let count = s.chars().fold(0, |acc, c| acc + (c=='0') as u8);
-      if count == 3 {
-        if self.turn == 0 {
-          let king_sq = alg_square("e1");
-          let rook_sq = alg_square("a1");
-        
+      m.kind = 0;
+      m.arg1 = (s.chars().fold(0, |acc, c| acc + (c=='0') as u8) == 3) as u8;
+      self.mov(m);
+      return;
+    }
+    let first = s.chars().nth(0).unwrap();
+    if first.is_ascii_uppercase() {
+      match first {
+        'K' => {
+          //we can safely assume there's only ever going to be one king
+          m.arg1 = self.piece_set[Piece::from_primitive(self.turn)][0]
+        }
+        'Q' => {
+                    
+        }
+        'R' => {
+
+        }
+        'B' => {
+
+        }
+        'N' => {
+
         }
       }
     }
+
+
+
+
   }
 
 }
