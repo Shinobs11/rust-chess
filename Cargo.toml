@@ -13,3 +13,5 @@ harness = false
 [dependencies]
 ary = "0.1.0"
 num_enum = "0.7.0"
+rand = { version = "0.8.5", features = ["small_rng"]}
+serde = "1.0.188"

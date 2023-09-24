@@ -36,7 +36,7 @@ fn move_str(b: &mut Board, s: String){
     match first {
       'K' => {
         //we can safely assume there's only ever going to be one king
-        m.arg1 = b.piece_set[Piece::from_primitive(b.turn)][0];
+        m.arg1 = *b.piece_set[Piece::from_primitive(b.turn)].iter().nth(0).unwrap();
       }
       'Q' => {
         
@@ -48,6 +48,9 @@ fn move_str(b: &mut Board, s: String){
 
       }
       'N' => {
+
+      }
+      _ => {
 
       }
     }
@@ -67,7 +70,7 @@ const BLACK_DISCOVERED_ATTACK_PIECES:[u8; 3] = [Piece::BQueen as u8, Piece::BRoo
 fn does_move_leave_king_in_check(mut b: Board, m: Move)->bool {
 
   let opposing_pieces = if b.turn == 1 {WHITE_DISCOVERED_ATTACK_PIECES} else {BLACK_DISCOVERED_ATTACK_PIECES};
-  let king_pos:i8 = if b.turn == 1 {b.piece_set.b_king[0] as i8} else {b.piece_set.w_king[0] as i8};
+  let king_pos:i8 = if b.turn == 1 {*b.piece_set.b_king.iter().next().unwrap() as i8} else {*b.piece_set.w_king.iter().next().unwrap() as i8};
   
   //the only pieces we need to check are bishops, rooks and queens.
   //diagonal moves either change position by a multiple of 9 or 6
@@ -112,7 +115,7 @@ fn find_queen_attack(b:&mut Board, target:u8)->i8{
   for queen in b.piece_set[Piece::from_primitive(2 + b.turn)].iter() {
     let diff:i8 = target as i8 - *queen as i8;
     if diff % 8 == 0 {
-      let div_8 = 
+      let div_8 = 0;
     }
 
   }
@@ -187,48 +190,6 @@ fn find_queen_attack(b:&mut Board, target:u8)->i8{
 // }
 
 
-pub fn board_from_fen(fen: String)->Board{
-  let mut board = Board::empty_default();
-  let mut _fen = fen.clone();
-  let mut fen_vec: Vec<&str> = fen.split(' ').collect();
-  let pos_strs = fen_vec[0].split('/').rev();
-
-  fn set_pos(b: &mut Board, piece: u8, idx: &mut u8){
-    b.sq[*idx as usize] = piece;
-    b.piece_set[Piece::from_primitive(piece)].push(*idx);
-    *idx += 1;
-  }
-
-  fn set_empty(b: &mut Board, count: char, idx: &mut u8) {
-    let n:u8 = ((count as u8) - 48) as u8;
-    for c in (0..n){
-      b.sq[(*idx + c) as usize] = Piece::Empty.into();
-    } 
-    *idx += n;
-  }
-  let mut idx = 0;
-  for pos_slice in pos_strs {
-    for c in pos_slice.chars() {
-      match c {
-        'k' => set_pos(&mut board, Piece::BKing.into(), &mut idx),
-        'q' => set_pos(&mut board, Piece::BQueen.into(), &mut idx),
-        'r' => set_pos(&mut board, Piece::BRook.into(), &mut idx),
-        'b' => set_pos(&mut board, Piece::BBishop.into(), &mut idx),
-        'n' => set_pos(&mut board, Piece::BKnight.into(), &mut idx),
-        'p' => set_pos(&mut board, Piece::BPawn.into(), &mut idx),
-        'K' => set_pos(&mut board, Piece::WKing.into(), &mut idx),
-        'Q' => set_pos(&mut board, Piece::WQueen.into(), &mut idx),
-        'R' => set_pos(&mut board, Piece::WRook.into(), &mut idx),
-        'B' => set_pos(&mut board, Piece::WBishop.into(), &mut idx),
-        'N' => set_pos(&mut board, Piece::WKnight.into(), &mut idx),
-        'P' => set_pos(&mut board, Piece::WPawn.into(), &mut idx),
-        '1'|'2'|'3'|'4'|'5'|'6'|'7'|'8' => set_empty(&mut board, c,&mut idx),
-        _ => {}
-      }
-    }
-  }
-  return board;
-}
 
 fn alg_square(s: &str)->u8{
   let x = s.chars().nth(0).unwrap();

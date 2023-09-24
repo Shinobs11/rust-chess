@@ -5,10 +5,10 @@ use crate::util::types::*;
 use crate::util::consts::*;
 
 /*
-Given a hypothetical piece and a board state, can said piece attack the given position from the initial position.
+Given a hypothetical piece and a board state, can said piece attack/move to the given position from the initial position.
 Does not consider checks.
 */
-fn in_attack_range(b: &mut Board, p:Piece, p0: u8, pf: u8)->bool{
+fn in_range(b: &mut Board, p:Piece, p0: u8, pf: u8)->bool{
   
   if p0 > 63 || pf > 63 {
     return false;
@@ -81,12 +81,51 @@ fn in_attack_range(b: &mut Board, p:Piece, p0: u8, pf: u8)->bool{
       }
       return in_range;
     }
-    GenericPiece::Pawn => {
-      
-
-      if b.en_pessant_sq < 63{
-        if pf == b.en_pessant_sq{
-
+    GenericPiece::Pawn => { //TODOS: refactor with less branches when brain is not mushy paste.
+      let color = p as u8 % 2;
+      let diff = pf as i8 - p0 as i8;
+      if color == 1 {
+        if diff.signum() != 1 {
+          return false;
+        }
+        if diff == 8 && (b.sq[(p0+8) as usize]) == Piece::Empty as u8 {
+          return true;
+        }
+        if diff == 16 && p0 >= 8 && p0 < 16 && (b.sq[(p0+8) as usize]) == Piece::Empty as u8 && (b.sq[(p0+16) as usize] == Piece::Empty as u8) {
+          return true;
+        }
+        if (diff == 15||diff == 17){
+          if b.sq[pf as usize] != Piece::Empty as u8 {
+            return true;
+          }
+          else if b.sq[(pf - 8) as usize] == Piece::BPawn as u8 && b.en_pessant_sq == pf {
+            return true;
+          }
+          else {
+            return false;
+          }
+        }
+      }
+      else{
+        if diff.signum() != -1 {
+          return false;
+        }
+        if diff == -8 && (b.sq[(p0-8) as usize]) == Piece::Empty as u8 {
+          return true;
+        }
+        if diff == -16 && p0 < 56 && p0 >= 48 && (b.sq[(p0-8) as usize] == Piece::Empty as u8) && (b.sq[(p0-16) as usize] == Piece::Empty as u8) {
+          return true;
+        }
+        if (diff == -15||diff == -17){
+          if b.sq[pf as usize] != Piece::Empty as u8 {
+            return true;
+          }
+          else if b.sq[(pf + 8) as usize] == Piece::WPawn as u8 && b.en_pessant_sq == pf {
+            return true;
+          }
+          else {
+            return false;
+          }
         }
       }
     }
@@ -97,15 +136,5 @@ fn in_attack_range(b: &mut Board, p:Piece, p0: u8, pf: u8)->bool{
       return false;
     }
   }
-  
-
-
-
-
-
   return false;
-
-
-
-
 }

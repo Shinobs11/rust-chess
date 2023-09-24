@@ -1,5 +1,6 @@
 use num_enum::{IntoPrimitive, FromPrimitive};
-#[derive(IntoPrimitive, FromPrimitive)]
+
+#[derive(IntoPrimitive, FromPrimitive, Clone, Copy)]
 #[repr(u8)]
 pub enum Piece {
   WKing = 0,

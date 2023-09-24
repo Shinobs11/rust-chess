@@ -2,6 +2,8 @@ mod util;
 
 use util::chess::*;
 
+use crate::util::types::Board;
+
 pub fn construct_bitmask_from_vec(v: &Vec<u8>){
 
 }
@@ -42,13 +44,14 @@ fn main() {
 
   let b = Board::default();
   
-  let bb = board_from_fen(s.to_string());
+  let bb = Board::board_from_fen(s.to_string());
   
 
   let arr = [0; 64];
+  println!("{}", b.to_string());
   println!("{}", bb.to_string());
 
-
+  
 
   
   print_board()
