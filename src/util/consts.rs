@@ -33,7 +33,7 @@ pub enum GenericPiece {
 }
 
 
-pub const PIECE_CHAR_MAP:[char; 13] = ['K', 'k', 'Q', 'q', 'R', 'r', 'B', 'b', 'N', 'n', 'P', 'p', '#'];
+pub const PIECE_CHAR_MAP:[char; 13] = ['♔', '♚', '♕', '♛', '♖', '♜', '♗', '♝', '♘', '♞', 'P', 'p', '#'];
 
 
 pub const WHITE_PIECES:[Piece; 6] = [Piece::WKing, Piece::WQueen, Piece::WRook, Piece::WBishop, Piece::WKnight, Piece::WPawn];
