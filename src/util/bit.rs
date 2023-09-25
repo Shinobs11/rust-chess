@@ -8,6 +8,8 @@
 //   return p.0 + p.1*8;
 // }
 
+use std::arch::x86_64::_lzcnt_u64;
+
 // pub fn select_bit_with_rank(vo: u64, ro: u64)->u64{
 //   let mut r = ro;
 //   let mut v = vo;
@@ -47,3 +49,21 @@
 //   s = 65 - s;
 //   return s;
 // } 
+use bitvec::{prelude::*, view::BitView};
+
+
+//from: me
+//set bits to zero according to mask
+// w = w & !m
+
+//from: https://graphics.stanford.edu/~seander/bithacks.html#ConditionalSetOrClearBitsWithoutBranching
+//conditionally set bits without branching
+// bool f;         // conditional flag
+// unsigned int m; // the bit mask
+// unsigned int w; // the word to modify:  if (f) w |= m; else w &= ~m; 
+
+// w ^= (-f ^ w) & m;
+
+// // OR, for superscalar CPUs:
+// w = (w & ~m) | (-f & m);
+
