@@ -1,16 +1,22 @@
+#![feature(portable_simd)]
+#![feature(stdsimd)]
 mod util;
 
-use std::arch::x86_64::_popcnt64;
+use std::arch::x86_64::{_mm512_and_epi64, _mm512_or_epi64};
+use std::{arch::x86_64::_popcnt64, ops::Shl, ops::Shr};
 
+use util::consts::*;
 use util::chess::*;
-
+use std::iter::*;
 use crate::util::types::Board;
+use std::simd::*;
 
 pub fn construct_bitmask_from_vec(v: &Vec<u8>){
 
 }
 
 pub type BitBoard = u64;
+
 fn main() {
   let s = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
   // let test = FENToBitBoard(s.to_string());
@@ -53,124 +59,134 @@ fn main() {
   // println!("{}", b.to_string());
   // println!("{}", bb.to_string());
 
-  fn branchless_white_rook(rook_mask: u64, white_mask: u64, black_mask: u64)->u64{
-    const FILE_DELTAS:&'static[i32; 2] = &[-8, 8];
-    const RANK_DELTAS:&'static[i32; 2] = &[-1, 1];
+  pub fn branchless_rook(rook_mask: u64, friendly_pos_mask: u64, opponent_pos_mask: u64)->u64{
     let rook_idx = rook_mask.leading_zeros();
-    let file_bounds:(i32, i32) = (0, 63);
-    let rank_bounds:(i32, i32) = ((rook_idx & !7) as i32, (rook_idx | 7) as i32);
     let mut result:u64 = 0;
+  
+    //potential optimization, I might be able to avoid using an 8 element array here, since I only need to consider the immediately previous result.
+    // delta = -8
+    let mut prev:u64 = rook_mask;
+    let mut attack_toggle:u64 = 0;
+    let mut range_max:u32 = rook_idx/8;
+    for i in (1..=range_max){
+      let has_been_blocked = !(prev == 0) as u64 * u64::MAX;
+      prev = has_been_blocked & (rook_mask << (i*8)) & !friendly_pos_mask & !attack_toggle;
+      attack_toggle = ((prev & opponent_pos_mask) > 0) as u64 * u64::MAX;
+      result |= prev;
+    }
+  
+    //delta = 8
     
-    for delta in FILE_DELTAS.iter(){
-      //potential optimization, I might be able to avoid using an 8 element array here, since I only need to consider the immediately previous result.
-      let mut offset_results:[u64; 8] = [rook_mask, 0, 0, 0, 0, 0, 0, 0];
-      let mut attack_toggle:u64 = 0;
-      for i in (1..8){
-        let idx = (rook_idx as i32 + i*delta);
-        let in_bounds = (idx >= file_bounds.0 &&  idx <= file_bounds.1) as u64 * u64::MAX;
-        offset_results[i as usize] = (in_bounds) & (rook_mask << (*delta + i as i32 * *delta)) & !white_mask & offset_results[(i-1) as usize] & !attack_toggle;
-        attack_toggle = ((offset_results[i as usize] & black_mask) > 0) as u64 * u64::MAX;  
-      }
-      for i in (1..8) {
-        result |= offset_results[i];
-      }
+    prev = rook_mask;
+    attack_toggle = 0;
+    range_max = (63-rook_idx)/8;
+    for i in (1..=range_max){
+      let has_been_blocked = !(prev == 0) as u64 * u64::MAX;
+      prev = has_been_blocked & (rook_mask >> (i*8)) & !friendly_pos_mask & !attack_toggle;
+      attack_toggle = ((prev & opponent_pos_mask) > 0) as u64 * u64::MAX;
+      result |= prev;
     }
-    for delta in RANK_DELTAS.iter(){
-      //potential optimization, I might be able to avoid using an 8 element array here, since I only need to consider the immediately previous result.
-      let mut offset_results:[u64; 8] = [rook_mask, 0, 0, 0, 0, 0, 0, 0];
-      let mut attack_toggle:u64 = 0;
-      for i in (1..8){
-        let idx = (rook_idx as i32 + i*delta);
-        let in_bounds = (idx >= rank_bounds.0 &&  idx <= rank_bounds.1) as u64 * u64::MAX;
-        println!("bounds: {}", in_bounds);
-        offset_results[i as usize] = (in_bounds) & (rook_mask << (*delta + i as i32 * *delta)) & !white_mask & offset_results[(i-1) as usize] & !attack_toggle;
-        attack_toggle = ((offset_results[i as usize] & black_mask) > 0) as u64 * u64::MAX;  
-      }
-      println!("bleh: {:?}", offset_results);
-      for i in (1..8) {
-        result |= offset_results[i];
-      }
+  
+    //delta = -1
+    prev = rook_mask;
+    attack_toggle = 0;
+    range_max = (rook_idx % 8);
+    for i in (1..=range_max){
+      let has_been_blocked = !(prev == 0) as u64 * u64::MAX;
+      prev = has_been_blocked & (rook_mask << (i as i32)) & !friendly_pos_mask  & !attack_toggle;
+      attack_toggle = ((prev & opponent_pos_mask) > 0) as u64 * u64::MAX;
+      result |= prev;
     }
+  
+    //delta = 1
+    prev = rook_mask;
+    attack_toggle = 0;
+    range_max = 7 - (rook_idx % 8);
+    for i in (1..=range_max){
+      let has_been_blocked = !(prev == 0) as u64 * u64::MAX;
+      prev = has_been_blocked & (rook_mask >> (i as i32)) & !friendly_pos_mask  & !attack_toggle;
+      attack_toggle = ((prev & opponent_pos_mask) > 0) as u64 * u64::MAX;
+      result |= prev;
+    }
+    
     return result;
   }
 
 
 
+  
 
-  let rook_mask:BitBoard =  0b0000000000000000000000000000000000000000000000000100000000000000;
+
+  // let rook_mask:BitBoard =  0b0000000000000000000000000000000000000000000000000100000000000000;
+  let rook_mask:BitBoard =  0b0000000000000000000000000000000000000000010000000000000000000000;
   // let rook_mask:BitBoard = 0b0000000000000010000000000000000000000000000000000000000000000000;
   let white_mask:BitBoard =  0b0000000000000000000000000000000000000000000000001111111111111111;
-  let black_mask:BitBoard = 0b0100000101000001000000000000000000000000000000000000000000000000;
+  let black_mask:BitBoard = 0b0100000101000001000000000000000000000000000100000000000000000000;
   
 
 
-  println!("{}", rook_mask << -8);
+  // println!("{}", rook_mask << -8);
   
-
-  // print_board(rook_mask);
-  // println!("white_mask");
-  // print_board(white_mask);
-  // println!("black_mask");
-  // print_board(black_mask);
-  // println!("res");
-
-
-
-  // let rook_idx:u8 = rook_mask.leading_zeros() as u8;
-  // println!("idx: {}", rook_idx.view_bits::<Msb0>());
-  // let lb = (rook_idx & !7);
-  // println!("lb: {}", lb.view_bits::<Msb0>());
-  // println!("lb: {}", lb);
-  // let ub = (rook_idx | 7);
-  // println!("ub: {}", ub);
+  println!("rook_mask");
+  print_board(rook_mask);
+  println!("white_mask");
+  print_board(white_mask);
+  println!("black_mask");
+  print_board(black_mask);
 
 
 
+  // let fens = retrieve_fens("/home/shino/chess-datasets/1000-rook-positions.fen".to_string());
+  // let boards:Vec<Board> = parse_fens(fens);
+  
+  // let mut masks:Vec<(u64, u64, u64)> = Vec::<(u64, u64, u64)>::with_capacity(boards.len());
+  // for (i, b) in (&boards).iter().enumerate() {
 
-
-
-  // let mut toggle:u64 = 0;
-  // let mut res:u64 = 0;
-  // let a = (rook_mask << 8) & !white_mask;
-  // res |= a;
-  // toggle = ((res & black_mask) > 0 ) as u64 * u64::MAX;
-  // let b = (rook_mask << 16) & !white_mask & a << 8 & !toggle as u64;
-  // res |= b;
-  // toggle = ((res & black_mask) > 0 ) as u64 * u64::MAX;
-  // let c = (rook_mask << 24) & !white_mask & b << 8 & !toggle as u64;
-  // res |= c;
-  // toggle = ((res & black_mask) > 0 ) as u64 * u64::MAX;
-  // let d = (rook_mask << 32) & !white_mask & c << 8 & !toggle as u64;
-  // res |= d;
-  // toggle = ((res & black_mask) > 0 ) as u64 * u64::MAX;
-  // let e = (rook_mask << 40) & !white_mask & d << 8 & !toggle as u64;
-  // res |= e;
-  // toggle = ((res & black_mask) > 0 ) as u64 * u64::MAX;
-  // let f = (rook_mask << 48) & !white_mask & e << 8 & !toggle as u64;
-  // res |= f;
-  // toggle = ((res & black_mask) > 0 ) as u64 * u64::MAX;
-
-
-  // let mut res:u64 = 0;
-  // let mut shift:u8 = 8;
-  // let rook_init_pos = rook_mask.view_bits::<Msb0>().first_one().unwrap();
-  // while true {
-  //   let rook_shift = (rook_mask << shift);
-  //   res |= (rook_shift & !white_mask);
-  //   if (res & black_mask) > 0 {
-  //     break;
+  //   let piece_mask:u64;
+  //   let friend_mask:u64;
+  //   let opp_mask:u64;
+  
+    
+  //   friend_mask = if b.turn == 0 {b.get_piece_mask(0)} else {b.get_piece_mask(1)};
+  //   opp_mask = if b.turn == 1 {b.get_piece_mask(0)} else {b.get_piece_mask(1)};
+    
+  //   if b.turn == 0 {
+  //     if b.piece_set[Piece::WRook].is_empty() {
+  //       continue;
+  //     } else {
+  //       let idx = *b.piece_set[Piece::WRook].iter().next().unwrap();
+  //       piece_mask = (1u64 << idx);
+  //     }
   //   }
-  //   shift+=8;
+  //   else if b.turn == 1 {
+  //     if b.piece_set[Piece::BRook].is_empty(){
+  //       continue;
+  //     } else {
+  //       let idx = *b.piece_set[Piece::BRook].iter().next().unwrap();
+  //       piece_mask = (1u64 << idx);
+  //     }
+  //   }
+  //   else {
+  //     panic!("???");
+  //   }
+  //   masks.push((piece_mask, friend_mask, opp_mask));
   // }
-
-  let res = branchless_white_rook(rook_mask, white_mask, black_mask);
-
-
-
-  print_board(res);
+  // println!("{}", masks.len());
+  // let res = branchless_rook(rook_mask, white_mask, black_mask);
 
 
+  // println!("res");
+  // print_board(res);
 
+    unsafe {
+
+      let vec_a:u64x8 = u64x8::from_array([1, 2, 4, 8, 16, 32, 64, 128]);
+      let vec_b:u64x8 = u64x8::from_array([0, 0, 0, 0, 0, 0, 0, 0]);
+      let vec_c:u64x8 = _mm512_or_epi64(vec_a.into(), vec_b.into()).into();
+  
+      println!("{:?}", vec_c);
+      // _mm512_and_epi64(a, b)
+    }
     
 }
 

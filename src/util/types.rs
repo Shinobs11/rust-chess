@@ -4,7 +4,7 @@ use std::hash::Hash;
 use crate::util::consts::*;
 use std::fmt::Display;
 use std::ops::{Index, IndexMut};
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct PieceSet {
   pub w_king:HashSet<u8>,
   pub b_king:HashSet<u8>,
@@ -95,7 +95,7 @@ impl IndexMut<Piece> for PieceSet {
   }
 }
 
-#[derive(PartialEq, Eq, Debug)]
+#[derive(PartialEq, Eq, Debug, Clone)]
 pub struct CastlingRights {
   pub w_long: bool,
   pub w_short: bool,
@@ -108,6 +108,7 @@ impl Default for CastlingRights {
   }
 }
 
+#[derive(Clone, Debug)]
 pub struct Board {
   pub sq: [u8; 64],
   pub piece_set: PieceSet,
@@ -127,8 +128,29 @@ impl Board {
       draw_count: 0 
     }
   }
+  pub fn get_piece_mask(&self, side:u8)->u64{
+    let mut mask:u64 = 0;
+    match side{
+      0 => {
+        for p in WHITE_PIECES {
+          for p_idx in self.piece_set[p].iter() {
+            mask |= (1u64 << *p_idx);
+          }
+        }
+      }
+      1 => {
+        for p in BLACK_PIECES {
+          for p_idx in self.piece_set[p].iter() {
+            mask |= (1u64 << *p_idx);
+          }
+        }
+      }
+      _ => {}
+    }
+    return mask;
+  }
   
-
+  
 }
 impl Default for Board {
   fn default() -> Self {
@@ -154,6 +176,9 @@ impl Board {
     let mut board = Board::empty_default();
     let mut _fen = fen.clone();
     let mut fen_vec: Vec<&str> = fen.split(' ').collect();
+    if fen_vec.len() != 6 {
+      panic!("Invalid FEN: FEN should have 6 sections, this string has {}", fen_vec.len());
+    }
     let pos_strs = fen_vec[0].split('/');
   
     fn set_pos(b: &mut Board, piece: u8, idx: &mut u8){
