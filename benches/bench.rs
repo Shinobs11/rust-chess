@@ -1,3 +1,5 @@
+#![feature(portable_simd)]
+#![feature(stdsimd)]
 use std::arch::x86_64::{_lzcnt_u64};
 use std::{collections::HashMap, hash::Hash, collections::HashSet};
 
@@ -8,6 +10,10 @@ use rand::distributions::Uniform;
 use rand::SeedableRng;
 use rand::rngs::SmallRng;
 use chess_game::util::chess::*;
+use core::simd;
+use Which::{First, Second};
+use std::simd::*;
+use bitvec::{prelude::*, view::BitView};
 #[inline]
 fn fibonacci(n: u64) -> u64 {
     match n {
@@ -68,7 +74,7 @@ fn sorted_set_bench(mut s: HashSet<u32>, n:Vec<u32>){
 use chess_game::types::*;
 use chess_game::consts::*;
 pub type BitBoard = u64;
-use bitvec::{prelude::*, view::BitView};
+
 
 
 fn branching_rook(rook_mask: u64, friendly_pos_mask: u64, opponent_pos_mask: u64){
@@ -180,7 +186,36 @@ pub fn branchless_rook(rook_mask: u64, friendly_pos_mask: u64, opponent_pos_mask
   
   return result;
 }
+fn simd_branchless_rook(rook_mask: u64, friendly_pos_mask: u64, opponent_pos_mask: u64)->u64{
 
+  let rook_idx:u64 = rook_mask.leading_zeros() as u64;
+  let mut result:u64x4 = u64x4::from_array([0;4]);
+  let simd_friendly_pos_mask = u64x4::from_array([friendly_pos_mask; 4]);
+  let simd_opponent_pos_mask = u64x4::from_array([opponent_pos_mask; 4]);
+
+  let negative_offsets:u64x2 = u64x2::from_array([8, 1]);
+  let positive_offsets:u64x2 = u64x2::from_array([8, 1]);
+
+  let mut prev:u64x4 = u64x4::from_array([rook_mask;4]);
+  let mut attack_toggle:u64x4 = u64x4::from_array([0;4]);
+
+  let lb:u64x4 = u64x4::from([0, 0, rook_idx & !7, rook_idx & !7]);
+  let ub:u64x4 = u64x4::from([63, 63, rook_idx | 7, rook_idx | 7]);
+  let simd_rook_idx = u64x4::from_array([rook_idx;4]);
+  for i in (1..8){
+    let simd_i:u64x4 = u64x4::from([i;4]);
+    let has_been_blocked:u64x4 = prev.simd_ne(u64x4::from_array([0;4])).to_int().abs().cast() * u64x4::from_array([u64::MAX; 4]);
+    let left_shift = u64x2::from_array([rook_mask;2]) << (simd_swizzle!(simd_i, [0, 2]) * negative_offsets);
+    let right_shift = u64x2::from_array([rook_mask;2]) >> (simd_swizzle!(simd_i, [1, 3]) * positive_offsets);
+    let shift:Simd<u64, 4> = simd_swizzle!(left_shift, right_shift, [First(0), Second(0), First(1), Second(1)]);
+    let offsets:i64x4 = simd_i.cast() * i64x4::from_array([-8, 8, -1, 1]) + simd_rook_idx.cast();
+    let checked_shift:Simd<u64, 4> = ((offsets.simd_ge(lb.cast()) & offsets.simd_le(ub.cast())).to_int().abs().cast() * u64x4::from_array([u64::MAX; 4])) & shift;
+    prev = has_been_blocked & checked_shift & !simd_friendly_pos_mask & !attack_toggle;
+    attack_toggle = ((prev & simd_opponent_pos_mask).simd_gt(u64x4::from_array([0; 4])).to_int().abs().cast() * u64x4::from_array([u64::MAX;4]));
+    result |= prev;
+  }
+  return result.reduce_or();
+}
 
 
 
@@ -214,6 +249,15 @@ fn batch_branchless_rook(v: &Vec<(u64, u64, u64)>)->Vec<u64>{
   }
   return res;
 }
+
+fn batch_simd_branchless_rook(v: &Vec<(u64, u64, u64)>)->Vec<u64>{
+  let mut res:Vec<u64> = Vec::<u64>::with_capacity(v.len());
+  for (rook_mask, friend_mask, foe_mask) in v {
+    res.push(simd_branchless_rook(*rook_mask, *friend_mask, *foe_mask));
+  }
+  return res;
+}
+
 
 pub fn criterion_benchmark(c: &mut Criterion) {
     // c.bench_function("fib 20", |b| b.iter(|| fibonacci(black_box(20))));
@@ -278,7 +322,7 @@ pub fn criterion_benchmark(c: &mut Criterion) {
     // c.bench_function("branching", |b| b.iter(|| branching_rook(rook_mask, white_mask, black_mask)));
     // c.bench_function("branchless", |b| b.iter(|| branchless_rook(rook_mask, white_mask, black_mask)));
     c.bench_function("batch_branchless", |b| b.iter(|| batch_branchless_rook(&masks)));
-
+    c.bench_function("simd_batch_branchless", |b| b.iter(|| batch_simd_branchless_rook(&masks)));
   }
 
 pub fn bit_ops_benchmarks(c: &mut Criterion){

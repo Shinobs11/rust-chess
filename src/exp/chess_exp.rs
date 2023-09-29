@@ -92,28 +92,22 @@ fn simd_branchless_rook(rook_mask: u64, friendly_pos_mask: u64, opponent_pos_mas
   // let mut range_max:u64x4 = u64x4::from_array([rook_idx/8, (63-rook_idx)/8, rook_idx % 8, 7 - rook_idx % 8]);
   let lb:u64x4 = u64x4::from([0, 0, rook_idx & !7, rook_idx & !7]);
   let ub:u64x4 = u64x4::from([63, 63, rook_idx | 7, rook_idx | 7]);
-  let simd_rook_mask = u64x4::from_array([rook_mask; 4]);
+  // let simd_rook_mask = u64x4::from_array([rook_mask; 4]);
   for i in (1..8){
     let simd_i:u64x4 = u64x4::from([i;4]);
     //for tomorrow: Masks seem to have 0 as false and -1 as true
     let has_been_blocked:u64x4 = prev.simd_ne(u64x4::from_array([0;4])).to_int().abs().cast() * u64x4::from_array([u64::MAX; 4]);
     let left_shift = u64x2::from_array([rook_mask;2]) << (simd_swizzle!(simd_i, [0, 2]) * negative_offsets);
     
-    let right_shift = u64x2::from_array([rook_mask;2]) << (simd_swizzle!(simd_i, [1, 3]) * negative_offsets);
+    let right_shift = u64x2::from_array([rook_mask;2]) >> (simd_swizzle!(simd_i, [1, 3]) * positive_offsets);
     let shift:Simd<u64, 4> = simd_swizzle!(left_shift, right_shift, [First(0), Second(0), First(1), Second(1)]);
     let offsets:i64x4 = simd_i.cast() * i64x4::from_array([-8, 8, -1, 1]);
-    let checked_shift = (offsets.simd_ge(lb.cast()) | offsets.simd_le(ub.cast())).to_int().abs().cast();
+    let checked_shift:Simd<u64, 4> = (offsets.simd_ge(lb.cast()) & offsets.simd_le(ub.cast())).to_int().abs().cast() * u64x4::from_array([u64::MAX; 4]) & shift;
     
-    prev = has_been_blocked & shift & !simd_friendly_pos_mask & !attack_toggle;
+    prev = has_been_blocked & checked_shift & !simd_friendly_pos_mask & !attack_toggle;
     attack_toggle = ((prev & simd_opponent_pos_mask).simd_gt(u64x4::from_array([0; 4])).to_int().abs().cast() * u64x4::from_array([u64::MAX;4]));
     result |= prev;
   }
-
-
-
-
-  
-  
   return result.reduce_and();
 }
 

@@ -4,7 +4,7 @@ mod util;
 
 use std::arch::x86_64::{_mm512_and_epi64, _mm512_or_epi64};
 use std::{arch::x86_64::_popcnt64, ops::Shl, ops::Shr};
-
+use Which::{First, Second};
 use util::consts::*;
 use util::chess::*;
 use std::iter::*;
@@ -59,6 +59,37 @@ fn main() {
   // println!("{}", b.to_string());
   // println!("{}", bb.to_string());
 
+  fn simd_branchless_rook(rook_mask: u64, friendly_pos_mask: u64, opponent_pos_mask: u64)->u64{
+
+    let rook_idx:u64 = rook_mask.leading_zeros() as u64;
+    let mut result:u64x4 = u64x4::from_array([0;4]);
+    let simd_friendly_pos_mask = u64x4::from_array([friendly_pos_mask; 4]);
+    let simd_opponent_pos_mask = u64x4::from_array([opponent_pos_mask; 4]);
+  
+    let negative_offsets:u64x2 = u64x2::from_array([8, 1]);
+    let positive_offsets:u64x2 = u64x2::from_array([8, 1]);
+  
+    let mut prev:u64x4 = u64x4::from_array([rook_mask;4]);
+    let mut attack_toggle:u64x4 = u64x4::from_array([0;4]);
+
+    let lb:u64x4 = u64x4::from([0, 0, rook_idx & !7, rook_idx & !7]);
+    let ub:u64x4 = u64x4::from([63, 63, rook_idx | 7, rook_idx | 7]);
+    let simd_rook_idx = u64x4::from_array([rook_idx;4]);
+    for i in (1..8){
+      let simd_i:u64x4 = u64x4::from([i;4]);
+      let has_been_blocked:u64x4 = prev.simd_ne(u64x4::from_array([0;4])).to_int().abs().cast() * u64x4::from_array([u64::MAX; 4]);
+      let left_shift = u64x2::from_array([rook_mask;2]) << (simd_swizzle!(simd_i, [0, 2]) * negative_offsets);
+      let right_shift = u64x2::from_array([rook_mask;2]) >> (simd_swizzle!(simd_i, [1, 3]) * positive_offsets);
+      let shift:Simd<u64, 4> = simd_swizzle!(left_shift, right_shift, [First(0), Second(0), First(1), Second(1)]);
+      let offsets:i64x4 = simd_i.cast() * i64x4::from_array([-8, 8, -1, 1]) + simd_rook_idx.cast();
+      let checked_shift:Simd<u64, 4> = ((offsets.simd_ge(lb.cast()) & offsets.simd_le(ub.cast())).to_int().abs().cast() * u64x4::from_array([u64::MAX; 4])) & shift;
+      prev = has_been_blocked & checked_shift & !simd_friendly_pos_mask & !attack_toggle;
+      attack_toggle = ((prev & simd_opponent_pos_mask).simd_gt(u64x4::from_array([0; 4])).to_int().abs().cast() * u64x4::from_array([u64::MAX;4]));
+      result |= prev;
+    }
+    return result.reduce_or();
+  }
+
   pub fn branchless_rook(rook_mask: u64, friendly_pos_mask: u64, opponent_pos_mask: u64)->u64{
     let rook_idx = rook_mask.leading_zeros();
     let mut result:u64 = 0;
@@ -111,8 +142,7 @@ fn main() {
     
     return result;
   }
-
-
+  
 
   
 
@@ -133,7 +163,8 @@ fn main() {
   print_board(white_mask);
   println!("black_mask");
   print_board(black_mask);
-
+  println!("res");
+  print_board(simd_branchless_rook(rook_mask, white_mask, black_mask));
 
 
   // let fens = retrieve_fens("/home/shino/chess-datasets/1000-rook-positions.fen".to_string());
@@ -178,15 +209,7 @@ fn main() {
   // println!("res");
   // print_board(res);
 
-    unsafe {
 
-      let vec_a:u64x8 = u64x8::from_array([1, 2, 4, 8, 16, 32, 64, 128]);
-      let vec_b:u64x8 = u64x8::from_array([0, 0, 0, 0, 0, 0, 0, 0]);
-      let vec_c:u64x8 = _mm512_or_epi64(vec_a.into(), vec_b.into()).into();
-  
-      println!("{:?}", vec_c);
-      // _mm512_and_epi64(a, b)
-    }
     
 }
 
