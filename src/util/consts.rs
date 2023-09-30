@@ -19,7 +19,7 @@ pub enum Piece {
   Empty = 12
 }
 
-#[derive(IntoPrimitive, FromPrimitive)]
+#[derive(IntoPrimitive, FromPrimitive, Clone, Copy)]
 #[repr(u8)]
 pub enum GenericPiece {
   King = 0,

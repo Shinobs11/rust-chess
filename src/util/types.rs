@@ -173,9 +173,13 @@ impl Display for Board {
 }
 impl Board {
   pub fn board_from_fen(fen: String)->Board{
+    let mut _fen = fen.trim().clone();
+    if _fen.is_empty() {
+      panic!("Invalid FEN: Empty string received.");
+    }
     let mut board = Board::empty_default();
-    let mut _fen = fen.clone();
     let mut fen_vec: Vec<&str> = fen.split(' ').collect();
+
     if fen_vec.len() != 6 {
       panic!("Invalid FEN: FEN should have 6 sections, this string has {}", fen_vec.len());
     }

@@ -10,6 +10,19 @@
 
 use std::arch::x86_64::_lzcnt_u64;
 
+pub const fn left_shift(v:u64, n:u8)->u64{
+  return v << n;
+}
+pub const fn right_shift(v:u64, n:u8)->u64{
+  return v >> n;
+}
+
+
+
+
+
+
+
 // pub fn select_bit_with_rank(vo: u64, ro: u64)->u64{
 //   let mut r = ro;
 //   let mut v = vo;
@@ -67,3 +80,5 @@ use bitvec::{prelude::*, view::BitView};
 // // OR, for superscalar CPUs:
 // w = (w & ~m) | (-f & m);
 
+//find minimum of two integers without branching.
+//r = y + ((x - y) & ((x - y) >> (sizeof(int) * CHAR_BIT - 1))); // min(x, y)
