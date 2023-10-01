@@ -129,10 +129,12 @@ pub fn criterion_benchmark(c: &mut Criterion) {
     }
 
 
-    let fens = retrieve_fens("/home/shino/chess-datasets/1000-Q-positions.fen".to_string());
+    // let fens = retrieve_fens("/home/shino/chess-datasets/1000-Q-positions.fen".to_string());
+    // let boards:Vec<Board> = parse_fens(fens);
+    // let queen_masks = get_position_masks(&boards, GenericPiece::Queen);
+    let fens = retrieve_fens("/home/shino/chess-datasets/1000-R-positions.fen".to_string());
     let boards:Vec<Board> = parse_fens(fens);
-    let queen_masks = get_position_masks(&boards, GenericPiece::Queen);
-    
+    let rook_masks = get_position_masks(&boards, GenericPiece::Rook);
 
     let rook_mask:BitBoard =  0b0000000000000000000000000000000000000000010000000000000000000000;
     // let rook_mask:BitBoard = 0b0000000000000010000000000000000000000000000000000000000000000000;
@@ -145,11 +147,12 @@ pub fn criterion_benchmark(c: &mut Criterion) {
 
     // c.bench_function("branching", |b| b.iter(|| branching_rook(rook_mask, white_mask, black_mask)));
     // c.bench_function("branchless", |b| b.iter(|| branchless_rook(rook_mask, white_mask, black_mask)));
-    // c.bench_function("batch_branchless_rook", |b| b.iter(|| batch_branchless_rook(&masks)));
+    
     // c.bench_function("batch_branchless_bishop", |b| b.iter(|| batch_bishop_attack_mask(&masks)));
     // c.bench_function("simd_batch_branchless", |b| b.iter(|| batch_simd_branchless_rook(&masks)));
-
-    c.bench_function("batch_queen_attack_mask", |b| b.iter(|| batch_bishop_attack_mask(&queen_masks)));
+    c.bench_function("batch_rook_attack_mask", |b| b.iter(|| batch_rook_attack_mask(&rook_masks)));
+    // c.bench_function("batch_queen_attack_mask", |b| b.iter(|| batch_queen_attack_mask(&queen_masks)));
+    // c.bench_function("batch_knight_attack_mask", |b| b.iter(|| batch_knight_attack_mask(&queen_masks)));
   }
 
 
