@@ -10,15 +10,21 @@ criterion = "0.5.1"
 name = "bench"
 harness = false
 
+[lib]
+name = "chesslib"
+path = "src/lib.rs"
+build = "src/cache/build.rs"
 
-
+[[bin]]
+name = "main"
+path = "src/main.rs"
 
 [dependencies]
 ary = "0.1.0"
 bitvec = "1.0.1"
 num_enum = "0.7.0"
 rand = { version = "0.8.5", features = ["small_rng"]}
-serde = "1.0.188"
+
 
 [profile.dev]
 opt-level=1
@@ -35,4 +41,8 @@ overflow-checks=false
 [profile.test]
 opt-level=2
 overflow-checks=false
+
+
+
+
 

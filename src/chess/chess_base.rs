@@ -1,8 +1,8 @@
 
 use num_enum::FromPrimitive;
 
-use crate::util::types::*;
-use crate::util::consts::*;
+use crate::chess::types::*;
+use crate::chess::consts::*;
 
 /*
 Given a hypothetical piece and a board state, can said piece attack/move to the given position from the initial position.

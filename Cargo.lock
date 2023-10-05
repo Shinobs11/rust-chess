@@ -89,7 +89,6 @@ dependencies = [
  "criterion",
  "num_enum",
  "rand",
- "serde",
 ]
 
 [[package]]

@@ -1,18 +1,15 @@
-#![feature(portable_simd)]
-#![feature(stdsimd)]
-#![feature(const_for)]
-#![feature(const_trait_impl)]
-#![feature(const_trait_impl)]
-#[deny(long_running_const_eval)]
 pub type BitBoard = u64;
 use Which::{First, Second};
-use bitvec::ptr::null;
 use std::simd::*;
 use bitvec::{prelude::*, view::BitView};
 use std::{ ops::Shl, ops::Shr};
 use std::collections::*;
-use crate::consts::*;
-use crate::bit::*;
+use crate::chess::consts::*;
+use crate::chess::bit::*;
+use std::collections::HashMap;
+use crate::cache::*;
+
+
 
 fn print_board(b:BitBoard){
   let slice = b.view_bits::<Lsb0>();
@@ -57,81 +54,30 @@ pub fn range_max(r: u64)->u32{
 
 
 
-/*
-This is just for starters, there's a million and one ways I can cut this down in size from 500K+ u8s
-*/
-pub const fn rook_cache()->[u8; 8*u16::MAX as usize]{
-  let mut cache:[u8; 8*u16::MAX as usize] = [0; 8*u16::MAX as usize];
-  let mut r_idx:usize = 0;
-  while r_idx < 8 {
-    let rook_mask = (1u8 << (7 - r_idx));
-    let mut comb = 0;
 
 
-    while comb < u16::MAX{
-      let friends_mask = ((comb & 0x00FF)  as u8); //least significant 8 bits
-      let foes_mask = (comb >> 8) as u8; //most significant 8 bits
-      let mut prev = rook_mask;
-      let mut attack_toggle:u8 = 0; 
-      let mut res:u8 = 0;
-      let mut i = 1;
-      //positive dir
-      let mut range_max = 7 - r_idx; //2
-      let mut has_been_blocked: u8;
-      while i <= range_max {
-        has_been_blocked = !(prev == 0) as u8 * u8::MAX;
-        prev = has_been_blocked & (rook_mask >> i) & !friends_mask & !attack_toggle;
-        if prev == 0 {
-          break;
-        }
-        attack_toggle = ((prev & foes_mask) > 0) as u8 * u8::MAX;
-        res |= prev;
-        i += 1;
-      }
-      range_max = r_idx;
-      i = 1;
-      prev = rook_mask;
-      attack_toggle = 0;
-      while i <= range_max {
-        has_been_blocked = !(prev == 0) as u8 * u8::MAX;
-        prev = has_been_blocked & (rook_mask << i) & !friends_mask & !attack_toggle;
-        if prev == 0 {
-          break;
-        }
-        attack_toggle = ((prev & foes_mask) > 0) as u8 * u8::MAX;
-        res |= prev;
-        i += 1;
-      }
 
-      cache[(r_idx * u16::MAX as usize) + comb as usize] = res;
-      comb += 1;
-    }
-    r_idx += 1;
-  }
-  return cache;
-}
-
-pub const ROOK_CACHE:[u8; 8*u16::MAX as usize] = rook_cache();
 
 
 pub fn rook_attack_mask(piece_mask:u64, friendly_pos_mask: u64, opponent_pos_mask: u64)->u64{
   let piece_idx:u8 = piece_mask.leading_zeros() as u8;
   let piece_row_idx = piece_idx / 8;
   let piece_col_idx = piece_idx % 8;
-  // println!("piece_row_idx: {}", piece_row_idx);
-  // println!("piece_col_idx: {}", piece_col_idx);
-  let row_mask = ((get_row_mask(opponent_pos_mask, piece_row_idx) as u16) << 8) | get_row_mask(friendly_pos_mask, piece_row_idx) as u16;
-  let col_mask = ((get_col_mask(opponent_pos_mask, piece_col_idx) as u16) << 8) | get_col_mask(friendly_pos_mask, piece_col_idx) as u16;
-  // println!("row_mask: {:#018b}", row_mask);
-  // println!("col_mask: {:#018b}", col_mask);
+
+  let row_mask = TERNARY_CACHE[get_row_mask(friendly_pos_mask, piece_row_idx) as usize] 
+                    + 2*TERNARY_CACHE[get_row_mask(opponent_pos_mask, piece_row_idx) as usize]
+                    | ((piece_row_idx as u16) << 13);
+  let col_mask = TERNARY_CACHE[get_col_mask(friendly_pos_mask, piece_col_idx) as usize] 
+                    + 2*TERNARY_CACHE[get_col_mask(opponent_pos_mask, piece_col_idx) as usize]
+                    | ((piece_col_idx as u16) << 13);
+
   //bit of a gotcha, need to provide piece_col_idx to index row_attack_mask and vice versa
-  let row_attack_mask = ROOK_CACHE[((piece_col_idx as usize * u16::MAX as usize) + row_mask as usize)];
-  let col_attack_mask = ROOK_CACHE[((piece_row_idx as usize * u16::MAX as usize) + col_mask as usize)];
-  
-  // println!("row_attack_mask: {:#010b}", row_attack_mask);
-  // println!("col_attack_mask: {:#010b}", col_attack_mask);
+  let row_attack_mask = ROOK_CACHE[row_mask as usize];
+  let col_attack_mask = ROOK_CACHE[col_mask as usize];
+
   return (put_row_mask(row_attack_mask, piece_row_idx) | put_col_mask(col_attack_mask, piece_col_idx)) & !piece_mask;
 }
+
 
 /*
 Well shit, i guess it's not branchless now. branch prediction is wild

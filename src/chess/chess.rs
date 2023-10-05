@@ -8,8 +8,8 @@ use std::collections::HashMap;
 
 use num_enum::{TryFromPrimitive, FromPrimitive};
 
-use crate::util::consts::*;
-use crate::util::types::*;
+use crate::chess::consts::*;
+use crate::chess::types::*;
 use std::fs::File;
 use std::io::prelude::*;
 use std::path::Path;

@@ -11,14 +11,14 @@ use rand::{RngCore, distributions};
 use rand::distributions::Uniform;
 use rand::SeedableRng;
 use rand::rngs::SmallRng;
-use chess_game::util::chess::*;
-use chess_game::exp::attack_bitmask::*;
 use core::simd;
 use Which::{First, Second};
 use std::simd::*;
 use bitvec::{prelude::*, view::BitView};
-use chess_game::types::*;
-use chess_game::consts::*;
+use chesslib::chess::consts::*;
+use chesslib::chess::types::*;
+use chesslib::exp::attack_bitmask::*;
+use chesslib::chess::chess::*;
 pub type BitBoard = u64;
 
 

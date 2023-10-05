@@ -1,16 +1,15 @@
 #![feature(portable_simd)]
 #![feature(stdsimd)]
-mod util;
+
 
 use std::arch::x86_64::{_mm512_and_epi64, _mm512_or_epi64};
 use std::{arch::x86_64::_popcnt64, ops::Shl, ops::Shr};
 use Which::{First, Second};
-use chess_game::attack_bitmask::*;
-use util::consts::*;
-use util::chess::*;
+use chesslib::cache::*;
+use chesslib::chess::bit::*;
+use chesslib::chess::consts::*;
+use chesslib::chess::types::*;
 use std::iter::*;
-use crate::util::bit::put_col_mask;
-use crate::util::types::Board;
 use std::simd::*;
 
 pub fn construct_bitmask_from_vec(v: &Vec<u8>){
@@ -76,12 +75,12 @@ fn main() {
   // print_board(put_col_mask(test_bb, 5));
 
     
-    // let rook_idx: usize = 2;
-    // let friend_mask:u8 = 0b000000001;
-    // let foe_mask:u8 = 0b00010000;
-    // //0b0001000000000001
-    // let m: usize = (rook_idx * u16::MAX as usize + (((foe_mask as u16) << 8)| friend_mask as u16) as usize);
-    // println!("{:#010b}", ROOK_CACHE[m as usize]);
+    let rook_idx: u8 = 2;
+    let friend_mask:u8 = 0b000000010;
+    let foe_mask:u8 = 0b00000010;
+    //0b0001000000000001
+    let m = get_ternary_bitrow(rook_idx, friend_mask, foe_mask);
+    println!("{:#010b}", ROOK_CACHE[m as usize]);
 
 
 

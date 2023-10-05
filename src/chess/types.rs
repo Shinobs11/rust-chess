@@ -1,7 +1,7 @@
 use num_enum::FromPrimitive;
 use std::collections::HashSet;
 use std::hash::Hash;
-use crate::util::consts::*;
+use crate::chess::consts::*;
 use std::fmt::Display;
 use std::ops::{Index, IndexMut};
 #[derive(Debug, Clone)]
