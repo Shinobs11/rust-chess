@@ -1,4 +1,4 @@
-use crate::cache::TERNARY_CACHE;
+use crate::cache::{TERNARY_CACHE, DIAG_MASK_CACHE};
 
 
 
@@ -50,11 +50,30 @@ pub fn put_col_mask(bb_col: u8, col: u8) -> u64 {
 }
 
 #[inline]
-pub fn get_ternary_bitrow(piece_idx: u8, friend_mask: u8, foe_mask: u8)->u16{
+pub fn get_ternary_bitmask(piece_idx: u8, friend_mask: u8, foe_mask: u8)->u16{
   return ((piece_idx as u16)  << 13) | (TERNARY_CACHE[friend_mask as usize] as u16 + 2 * TERNARY_CACHE[foe_mask as usize] as u16);
 }
 
+pub const GET_DIAG_MASK_MAGIC:u64 = 0x101010101010101;
+#[inline]
+pub fn get_pos_diag_mask(bb:u64, piece_idx: u8)->u64{
+  return ((bb & DIAG_MASK_CACHE[2*(piece_idx as usize)]) * GET_DIAG_MASK_MAGIC) >> 56;
+}
 
+#[inline]
+pub fn get_neg_diag_mask(bb:u64, piece_idx: u8)->u64{
+  return ((bb & DIAG_MASK_CACHE[2*(piece_idx as usize) + 1]) * GET_DIAG_MASK_MAGIC) >> 56;
+}
+
+
+
+// #[inline]
+// pub fn get_bit_indices(bits: u64)-> Vec<u8> {
+//   let mut res: Vec<u8> = Vec::<u8>::with_capacity(8);
+  
+  
+
+// }
 
 
 //set bits to zero according to mask

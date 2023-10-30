@@ -10,4 +10,4 @@ pub mod chess_base;
 pub mod bit;
 pub mod consts;
 pub mod types;
-
+pub mod attack_bitmask;

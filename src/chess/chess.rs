@@ -93,68 +93,6 @@ fn move_str(b: &mut Board, s: String){
 }
 
 
-//TODOS: Refactor this section      
-const WHITE_DISCOVERED_ATTACK_PIECES:[u8; 3] = [Piece::WQueen as u8, Piece::WRook as u8, Piece::WBishop as u8];
-const BLACK_DISCOVERED_ATTACK_PIECES:[u8; 3] = [Piece::BQueen as u8, Piece::BRook as u8, Piece::BBishop as u8];
-#[inline(always)]
-fn does_move_leave_king_in_check(mut b: Board, m: Move)->bool {
-
-  let opposing_pieces = if b.turn == 1 {WHITE_DISCOVERED_ATTACK_PIECES} else {BLACK_DISCOVERED_ATTACK_PIECES};
-  let king_pos:i8 = if b.turn == 1 {*b.piece_set.b_king.iter().next().unwrap() as i8} else {*b.piece_set.w_king.iter().next().unwrap() as i8};
-  
-  //the only pieces we need to check are bishops, rooks and queens.
-  //diagonal moves either change position by a multiple of 9 or 6
-  
-  
-  for bishop_pos in b.piece_set[Piece::try_from(opposing_pieces[2]).unwrap()].iter() {
-    let diff:i8 = (king_pos as i8 - *bishop_pos as i8);
-    let mod_9 = diff % 9;
-    if (diff % 7 == 0){
-      let div_7 = diff/7;
-      for i in (1..(div_7.signum()*div_7)){
-        let checked_position = (div_7.signum()*7*i + king_pos) as usize;
-        if(b.sq[checked_position]==Piece::Empty as u8){
-          return true;
-        }
-      }
-    }
-    if (diff % 9 == 0){
-      let div_9 = diff/9;
-      for i in (1..(div_9.signum()*div_9)){
-        let checked_position = (div_9.signum()*9*i + king_pos) as usize;
-        if(b.sq[checked_position]==Piece::Empty as u8){
-          return true;
-        }
-      }
-    }
-    
-  }
-  // for rook_pos in b.piece_set[opposing_pieces[1]] {
-
-
-  // }
-  // for queen_pos in b.piece_set[opposing_pieces[0]] {
-
-  return false;
-}
-
-
-
-
-fn find_queen_attack(b:&mut Board, target:u8)->i8{
-  for queen in b.piece_set[Piece::from_primitive(2 + b.turn)].iter() {
-    let diff:i8 = target as i8 - *queen as i8;
-    if diff % 8 == 0 {
-      let div_8 = 0;
-    }
-
-  }
-
-
-  return -1;
-
-}
-
 
 
 
