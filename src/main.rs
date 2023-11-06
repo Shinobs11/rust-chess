@@ -38,19 +38,21 @@ fn main() {
   8, 9, 10, 11, 12, 13, 14, 15 //black pawns
 ];
 
-  const W_KING_DEFAULT_MASK: u64 = (1 << (63 - 60));
-  const W_QUEEN_DEFAULT_MASK: u64 = (1 << (63 - 59));
-  const W_ROOK_DEFAULT_MASK: u64 = (1 << (63 - 63)) | (1 << (63 - 56));
-  const W_BISHOP_DEFAULT_MASK: u64 = (1 << (63 - 61)) | (1 << (63 - 58));
-  const W_KNIGHT_DEFAULT_MASK: u64 = (1 << (63 - 62)) | (1 << (63 - 57));
-  const W_PAWN_DEFAULT_MASK: u64 = (1 << (63 - 47)) | (1 << (63 - 48)) | (1 << (63 - 49)) | (1 << (63 - 50)) | (1 << (63 - 51)) | (1 << (63 - 52)) | (1 << (63 - 53)) | (1 << (63 - 54));
 
-  const B_KING_DEFAULT_MASK: u64 = (1 << (63 - 4));
-  const B_QUEEN_DEFAULT_MASK: u64 = (1 << (63 - 3));
-  const B_ROOK_DEFAULT_MASK: u64 = (1 << (63 - 0)) | (1 << (63 - 7));
-  const B_BISHOP_DEFAULT_MASK: u64 = (1 << (63 - 2)) | (1 << (63 - 5));
-  const B_KNIGHT_DEFAULT_MASK: u64 = (1 << (63 - 1)) | (1 << (63 - 6));
-  const B_PAWN_DEFAULT_MASK: u64 = (1 << (63 - 8)) | (1 << (63 - 9)) | (1 << (63 - 10)) | (1 << (63 - 11)) | (1 << (63 - 12)) | (1 << (63 - 13)) | (1 << (63 - 14)) | (1 << (63 - 15));
+
+  // const W_KING_DEFAULT_MASK: u64 = (1 << (63 - 60));
+  // const W_QUEEN_DEFAULT_MASK: u64 = (1 << (63 - 59));
+  // const W_ROOK_DEFAULT_MASK: u64 = (1 << (63 - 63)) | (1 << (63 - 56));
+  // const W_BISHOP_DEFAULT_MASK: u64 = (1 << (63 - 61)) | (1 << (63 - 58));
+  // const W_KNIGHT_DEFAULT_MASK: u64 = (1 << (63 - 62)) | (1 << (63 - 57));
+  // const W_PAWN_DEFAULT_MASK: u64 = (1 << (63 - 47)) | (1 << (63 - 48)) | (1 << (63 - 49)) | (1 << (63 - 50)) | (1 << (63 - 51)) | (1 << (63 - 52)) | (1 << (63 - 53)) | (1 << (63 - 54));
+
+  // const B_KING_DEFAULT_MASK: u64 = (1 << (63 - 4));
+  // const B_QUEEN_DEFAULT_MASK: u64 = (1 << (63 - 3));
+  // const B_ROOK_DEFAULT_MASK: u64 = (1 << (63 - 0)) | (1 << (63 - 7));
+  // const B_BISHOP_DEFAULT_MASK: u64 = (1 << (63 - 2)) | (1 << (63 - 5));
+  // const B_KNIGHT_DEFAULT_MASK: u64 = (1 << (63 - 1)) | (1 << (63 - 6));
+  // const B_PAWN_DEFAULT_MASK: u64 = (1 << (63 - 8)) | (1 << (63 - 9)) | (1 << (63 - 10)) | (1 << (63 - 11)) | (1 << (63 - 12)) | (1 << (63 - 13)) | (1 << (63 - 14)) | (1 << (63 - 15));
 
   // let rook_mask:BitBoard =      0b0000000000000000000000000000000000000000010000000000000000000000;
   // let bishop_mask:BitBoard =    0b0000000000000000000000000000000000001000000000000000000000000000;

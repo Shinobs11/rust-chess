@@ -30,3 +30,15 @@
 
   
 // }
+
+#[test]
+fn test_convert_fen_to_board(){
+
+  
+
+
+}
+
+
+
+
