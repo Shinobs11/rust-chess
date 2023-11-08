@@ -27,7 +27,7 @@ const fn ray_cache()->[u8; 65536]{
   let mut cache:[u8; 65536] = [0; 65536];
   let mut p_idx = 0;
   while p_idx < 8 {
-    let rook_mask = (1u8 << (7 - p_idx));
+    let piece_mask = (1u8 << (7 - p_idx));
     let mut comb = 0;
     while comb < u16::MAX{
       let friends_mask = ((comb & 0x00FF)  as u8); //least significant 8 bits
@@ -36,34 +36,34 @@ const fn ray_cache()->[u8; 65536]{
         comb += 1;
         continue;
       }
-      let mut prev = rook_mask;
-      let mut attack_toggle:u8 = 0; 
+      let mut prev = piece_mask;
+      let mut has_captured:u8 = 0; 
       let mut res:u8 = 0;
       let mut i = 1;
       //positive dir
       let mut range_max = 7 - p_idx; //2
-      let mut has_been_blocked: u8;
+      let mut has_not_been_blocked: u8;
       while i <= range_max {
-        has_been_blocked = !(prev == 0) as u8 * u8::MAX;
-        prev = has_been_blocked & (rook_mask >> i) & !friends_mask & !attack_toggle;
+        has_not_been_blocked = !(prev == 0) as u8 * u8::MAX;
+        prev = has_not_been_blocked & (piece_mask >> i) & !friends_mask & !has_captured;
         if prev == 0 {
           break;
         }
-        attack_toggle = ((prev & foes_mask) > 0) as u8 * u8::MAX;
+        has_captured = ((prev & foes_mask) > 0) as u8 * u8::MAX;
         res |= prev;
         i += 1;
       }
       range_max = p_idx;
       i = 1;
-      prev = rook_mask;
-      attack_toggle = 0;
+      prev = piece_mask;
+      has_captured = 0;
       while i <= range_max {
-        has_been_blocked = !(prev == 0) as u8 * u8::MAX;
-        prev = has_been_blocked & (rook_mask << i) & !friends_mask & !attack_toggle;
+        has_not_been_blocked = !(prev == 0) as u8 * u8::MAX;
+        prev = has_not_been_blocked & (piece_mask << i) & !friends_mask & !has_captured;
         if prev == 0 {
           break;
         }
-        attack_toggle = ((prev & foes_mask) > 0) as u8 * u8::MAX;
+        has_captured = ((prev & foes_mask) > 0) as u8 * u8::MAX;
         res |= prev;
         i += 1;
       }
@@ -100,32 +100,17 @@ const fn king_cache()->[u64; 64]{
 }
 
 const fn knight_cache()->[u64; 64]{
-  const KNIGHT_OFFSETS_1:[i32; 4] = [-17, -15, 15, 17];
-  const KNIGHT_OFFSETS_2:[i32; 4] = [-10, -6, 6, 10];
   let mut out:[u64; 64] = [0; 64];
   let mut idx = 0;
   while idx < 64 {
     let mut res = 0;
-    let mut target_pos:i32 = 0;
-    let mut d:i32 = i32::MIN;
-    let mut d_idx = 0;
-    while d_idx < 4 {
-      d = KNIGHT_OFFSETS_1[d_idx];
-      target_pos = idx + d;
-      if (target_pos >= 0 && target_pos <=63) && (target_pos/8 - idx/8 ) == (2 * d.signum()){
-        res |= if (d.is_positive()) {left_shift((1u64 << (63 - idx)) as u64, d as u8)} else {right_shift((1u64 << (63 - idx)) as u64, d.abs() as u8)};
-      }
-      d_idx += 1;
-    }
-    d_idx = 0;
-    while d_idx < 4 {
-      d = KNIGHT_OFFSETS_2[d_idx];
-      target_pos = idx + d;
-      if (target_pos >= 0 && target_pos <=63) && (target_pos/8 - idx/8) == (d.signum()){
-        res |= if (d.is_positive()) {left_shift((1u64 << (63 - idx)) as u64, d as u8)} else {right_shift((1u64 << (63 - idx)) as u64, d.abs() as u8)};
-      }
-      d_idx += 1;
-    }
+    let l1:u64 = ((1 << (63 - idx)) >> 1) & 0x7f7f7f7f7f7f7f7f;
+    let l2:u64  = ((1 << (63 - idx)) >> 2) & 0x3f3f3f3f3f3f3f3f;
+    let r1: u64 = ((1 << (63 - idx)) << 1) & 0xfefefefefefefefe;
+    let r2: u64 = ((1 << (63 - idx)) << 2) & 0xfcfcfcfcfcfcfcfc;
+    let h1 = l1 | r1;
+    let h2 = l2 | r2;
+    res = (h1 << 16) | (h1 >> 16) | (h2 << 8) | (h2 >> 8);
     out[idx as usize] = res;
     idx+=1;
   }

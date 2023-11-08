@@ -139,17 +139,16 @@ pub fn rook_attack_mask(piece_mask:u64, friendly_pos_mask: u64, opponent_pos_mas
   let piece_row_idx: u8 = (piece_idx / 8) as u8;
   let piece_col_idx: u8 = (piece_idx % 8) as u8;
 
-  let row_mask = TERNARY_CACHE[get_row_mask(friendly_pos_mask, piece_row_idx) as usize] 
-                    + 2*TERNARY_CACHE[get_row_mask(opponent_pos_mask, piece_row_idx) as usize]
-                    | ((piece_row_idx as u16) << 13);
-  let col_mask = TERNARY_CACHE[get_col_mask(friendly_pos_mask, piece_col_idx) as usize] 
-                    + 2*TERNARY_CACHE[get_col_mask(opponent_pos_mask, piece_col_idx) as usize]
-                    | ((piece_col_idx as u16) << 13);
+  let row_mask = (TERNARY_CACHE[get_row_mask(friendly_pos_mask, piece_row_idx) as usize] 
+                    + 2*TERNARY_CACHE[get_row_mask(opponent_pos_mask, piece_row_idx) as usize])
+                    | ((piece_col_idx as u16) << 13); //watch out for the piece_col_idx               
+  let col_mask = (TERNARY_CACHE[get_col_mask(friendly_pos_mask, piece_col_idx) as usize] 
+                    + 2*TERNARY_CACHE[get_col_mask(opponent_pos_mask, piece_col_idx) as usize])
+                    | ((piece_row_idx as u16) << 13);// and piece_row_idx
 
   //bit of a gotcha, need to provide piece_col_idx to index row_attack_mask and vice versa
   let row_attack_mask = RAY_CACHE[row_mask as usize];
   let col_attack_mask = RAY_CACHE[col_mask as usize];
-
   res = (put_row_mask(row_attack_mask, piece_row_idx) | put_col_mask(col_attack_mask, piece_col_idx)) & !piece_mask;
   return res;
 }

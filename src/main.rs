@@ -23,20 +23,20 @@ pub type BitBoard = u64;
 fn main() {
   let s = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 
-  pub const default_pieces:[u8;32] = [
-  60, //white king
-  59, //white queen
-  63, 56, //white rooks
-  61, 58, //white bishops
-  62, 57, //white knights
-  47, 48, 49, 50, 51, 52, 53, 54, //white pawns
-  4, //black king
-  3, //black queen
-  0, 7, //black rooks
-  2, 5, //black bishops
-  1, 6, //black knights
-  8, 9, 10, 11, 12, 13, 14, 15 //black pawns
-];
+//   pub const default_pieces:[u8;32] = [
+//   60, //white king
+//   59, //white queen
+//   63, 56, //white rooks
+//   61, 58, //white bishops
+//   62, 57, //white knights
+//   47, 48, 49, 50, 51, 52, 53, 54, //white pawns
+//   4, //black king
+//   3, //black queen
+//   0, 7, //black rooks
+//   2, 5, //black bishops
+//   1, 6, //black knights
+//   8, 9, 10, 11, 12, 13, 14, 15 //black pawns
+// ];
 
 
 
@@ -79,16 +79,27 @@ fn main() {
   // print_board(black_mask);
   // println!("res");
   // print_board(rook_attack_mask(rook_mask, white_mask, black_mask));
+  // 0b00001000
+  // 0b11100111
 
+  let friend:u8 =     0b00001000;
+  let foe:u8 =        0b11100111;
+  println!("ter_cache[8]: {}", TERNARY_CACHE[8]);
+  println!("ter_cache[231]: {}", TERNARY_CACHE[231]);
+  println!("friend: {friend}");
+  println!("foe: {foe}");
+  let rook_mask:u8 =  0b00001000;
+  let rook_idx:u8 = rook_mask.leading_zeros() as u8;
+  println!("rook_idx: {}", rook_idx);
+  let row_mask = (TERNARY_CACHE[friend as usize] 
+                    + 2*TERNARY_CACHE[foe as usize])
+                    | ((rook_idx as u16) << 13);
 
-  // let friend:u8 = 0b01100000;
-  // let foe:u8 = 0b00000000;
-  // let rook_mask:u8 = 0b00000001;
-  // let rook_idx:u16 = rook_mask.leading_zeros() as u16;
-  // let comb = (foe as u16) << 8 | friend as u16;
-  // let res = RAY_CACHE[(rook_idx * u16::MAX) as usize + comb as usize];
+  println!("{row_mask}");
+  let ter = (TERNARY_CACHE[friend as usize] + 2 * TERNARY_CACHE[foe as usize]) | ((rook_idx as u16) << 13);
+  let res = RAY_CACHE[row_mask as usize];
   // // let rc = ray_cache();
-  // println!("{:#010b}", res);
+  println!("{:#010b}", res);
 
   // let mut n = 0;
   // for i in RAY_CACHE.iter() {
@@ -233,6 +244,33 @@ fn main() {
   //   print_board(*x);
   //   println!();
   // }
+
+
+
+
+
+    // print_board(KNIGHT_CACHE[41]);
+
+    // const KNIGHT_OFFSETS:[i32; 8] = [-17, -15, 15, 17, -10, -6, 6, 10];
+    // for offset in KNIGHT_OFFSETS.iter() {
+    //   println!("offset: {}", offset);
+    //   print_board(1 << (63 - (41 + offset)));
+    //   println!();
+    // }
+    
+    // let l1:u64 = ((1 << (63 - 41)) >> 1) & 0x7f7f7f7f7f7f7f7f;
+    // let l2:u64  = ((1 << (63 - 41)) >> 2) & 0x3f3f3f3f3f3f3f3f;
+    // let r1: u64 = ((1 << (63 - 41)) << 1) & 0xfefefefefefefefe;
+    // let r2: u64 = ((1 << (63 - 41)) << 2) & 0xfcfcfcfcfcfcfcfc;
+    // let h1 = l1 | r1;
+    // let h2 = l2 | r2;
+    // print_board(h1);
+    // println!();
+    // print_board(h2);
+    // println!(); 
+    // print_board((h1 << 16) | (h1 >> 16) | (h2 << 8) | (h2 >> 8));
+
+
 }
 
 
