@@ -60,15 +60,15 @@ pub fn pawn_attack_mask(piece_mask: u64, friendly_pos_mask: u64, opponent_pos_ma
     let starting_row: u8 = 7;
     res |= (((piece_idx / 8) as u8 == starting_row) as u64) * (piece_mask << (16)) & !friendly_pos_mask & !opponent_pos_mask;
     res |= (piece_mask << 8) & !friendly_pos_mask & !opponent_pos_mask;
-    res |= (piece_mask << 7) & (opponent_pos_mask | (1 << (63 - ep_square)));
-    res |= (piece_mask << 9) & (opponent_pos_mask | (1 << (63 - ep_square)));
+    res |= ((piece_mask & 0xfefefefefefefefe) << 7) & (opponent_pos_mask | (1 << (63 - ep_square))); //TODOs: look into if this can be cut down a bit. 
+    res |= ((piece_mask & 0x7f7f7f7f7f7f7f7f) << 9) & (opponent_pos_mask | (1 << (63 - ep_square)));
   }
   else {
     let starting_row: u8 = 1;
     res |= (((piece_idx / 8) as u8 == starting_row) as u64) * (piece_mask >> 16) & !friendly_pos_mask & !opponent_pos_mask;
     res |= (piece_mask >> 8) & !friendly_pos_mask & !opponent_pos_mask;
-    res |= (piece_mask >> 7) & (opponent_pos_mask | (1 << (63 - ep_square)));
-    res |= (piece_mask >> 9) & (opponent_pos_mask | (1 << (63 - ep_square)));   
+    res |= ((piece_mask & 0x7f7f7f7f7f7f7f7f) >> 7) & (opponent_pos_mask | (1 << (63 - ep_square)));
+    res |= ((piece_mask & 0xfefefefefefefefe)  >> 9) & (opponent_pos_mask | (1 << (63 - ep_square)));   
   }
 
 
@@ -194,10 +194,10 @@ pub fn queen_attack_mask(piece_mask: u64, friendly_pos_mask: u64, opponent_pos_m
 
   let row_mask: u16 = TERNARY_CACHE[get_row_mask(friendly_pos_mask, piece_row_idx) as usize] 
                     + 2*TERNARY_CACHE[get_row_mask(opponent_pos_mask, piece_row_idx) as usize]
-                    | ((piece_row_idx as u16) << 13);
+                    | ((piece_col_idx as u16) << 13);
   let col_mask: u16 = TERNARY_CACHE[get_col_mask(friendly_pos_mask, piece_col_idx) as usize] 
                     + 2*TERNARY_CACHE[get_col_mask(opponent_pos_mask, piece_col_idx) as usize]
-                    | ((piece_col_idx as u16) << 13);
+                    | ((piece_row_idx as u16) << 13);
 
   //bit of a gotcha, need to provide piece_col_idx to index row_attack_mask and vice versa
   let row_attack_mask: u8 = RAY_CACHE[row_mask as usize];
@@ -239,19 +239,9 @@ pub fn batch_queen_attack_mask(v: &Vec<(u64, u64, u64)>)->Vec<u64>{
 // B. I handle check in the mask
 // as I simply don't have enough information, being passed into the function, I'm obv going to choose A.
 pub fn king_attack_mask(piece_mask: u64, friendly_pos_mask: u64, opponent_pos_mask: u64)->u64 {
-  let mut res: u64 = 0;
   //There is an opportunity for caching to be beneficial here, but I'm not sure if it'd be worth while
   //after all, there's like 32 ops in total here. 
-  res |= (piece_mask << 9) & (!friendly_pos_mask | opponent_pos_mask);
-  res |= (piece_mask << 8) & (!friendly_pos_mask | opponent_pos_mask);
-  res |= (piece_mask << 7) & (!friendly_pos_mask | opponent_pos_mask);
-  res |= (piece_mask << 1) & (!friendly_pos_mask | opponent_pos_mask);
-  res |= (piece_mask >> 1) & (!friendly_pos_mask | opponent_pos_mask);
-  res |= (piece_mask >> 7) & (!friendly_pos_mask | opponent_pos_mask);
-  res |= (piece_mask >> 8) & (!friendly_pos_mask | opponent_pos_mask);
-  res |= (piece_mask >> 9) & (!friendly_pos_mask | opponent_pos_mask);
-  
-  return res;
+  return KING_CACHE[piece_mask.leading_zeros() as usize] & !friendly_pos_mask;
 } 
 pub fn batch_king_attack_mask(v: &Vec<(u64, u64, u64)>)->Vec<u64>{
   let mut res:Vec<u64> = Vec::<u64>::with_capacity(v.len());

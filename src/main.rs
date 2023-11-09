@@ -82,24 +82,24 @@ fn main() {
   // 0b00001000
   // 0b11100111
 
-  let friend:u8 =     0b00001000;
-  let foe:u8 =        0b11100111;
-  println!("ter_cache[8]: {}", TERNARY_CACHE[8]);
-  println!("ter_cache[231]: {}", TERNARY_CACHE[231]);
-  println!("friend: {friend}");
-  println!("foe: {foe}");
-  let rook_mask:u8 =  0b00001000;
-  let rook_idx:u8 = rook_mask.leading_zeros() as u8;
-  println!("rook_idx: {}", rook_idx);
-  let row_mask = (TERNARY_CACHE[friend as usize] 
-                    + 2*TERNARY_CACHE[foe as usize])
-                    | ((rook_idx as u16) << 13);
+  // let friend:u8 =     0b00001000;
+  // let foe:u8 =        0b11100111;
+  // println!("ter_cache[8]: {}", TERNARY_CACHE[8]);
+  // println!("ter_cache[231]: {}", TERNARY_CACHE[231]);
+  // println!("friend: {friend}");
+  // println!("foe: {foe}");
+  // let rook_mask:u8 =  0b00001000;
+  // let rook_idx:u8 = rook_mask.leading_zeros() as u8;
+  // println!("rook_idx: {}", rook_idx);
+  // let row_mask = (TERNARY_CACHE[friend as usize] 
+  //                   + 2*TERNARY_CACHE[foe as usize])
+  //                   | ((rook_idx as u16) << 13);
 
-  println!("{row_mask}");
-  let ter = (TERNARY_CACHE[friend as usize] + 2 * TERNARY_CACHE[foe as usize]) | ((rook_idx as u16) << 13);
-  let res = RAY_CACHE[row_mask as usize];
-  // // let rc = ray_cache();
-  println!("{:#010b}", res);
+  // println!("{row_mask}");
+  // let ter = (TERNARY_CACHE[friend as usize] + 2 * TERNARY_CACHE[foe as usize]) | ((rook_idx as u16) << 13);
+  // let res = RAY_CACHE[row_mask as usize];
+  // // // let rc = ray_cache();
+  // println!("{:#010b}", res);
 
   // let mut n = 0;
   // for i in RAY_CACHE.iter() {
@@ -124,13 +124,13 @@ fn main() {
     // let m = get_ternary_bitmask(rook_idx, friend_mask, foe_mask);
     // println!("{:#010b}", RAY_CACHE[m as usize]);
 
-  fn convert_bit_slice_to_u64(bs: &BitSlice)->u64{
-    let mut res:u64 = 0;
-    for (i, x) in bs.iter().enumerate(){
-      res |= (1 << (63 - i)) & (((*x) as u64) * u64::MAX);
-    }
-    return res;
+fn convert_bit_slice_to_u64(bs: &BitSlice)->u64{
+  let mut res:u64 = 0;
+  for (i, x) in bs.to_bitvec().iter().enumerate(){
+    res |= (1u64 << (63 - i)) & (((*x) as u64) * u64::MAX);
   }
+  return res;
+}
   // let friend_mask_arr = bits![
   //   0, 0, 0, 0, 0, 0, 0, 0,
   //   0, 0, 0, 0, 0, 0, 0, 0,
@@ -258,6 +258,45 @@ fn main() {
     //   println!();
     // }
     
+
+
+    // let king_pos = bits![
+    //     0, 0, 0, 0, 1, 0, 0, 0,
+    //     0, 0, 0, 0, 0, 0, 0, 0,
+    //     0, 0, 0, 0, 0, 0, 0, 0,
+    //     0, 0, 0, 0, 0, 0, 0, 0,
+    //     0, 0, 0, 0, 0, 0, 0, 0,
+    //     0, 0, 0, 0, 0, 0, 0, 0,
+    //     0, 0, 0, 0, 0, 0, 0, 0,
+    //     0, 0, 0, 0, 0, 0, 0, 0,
+    //   ];
+    // let mult = bits![
+    //   0, 0, 0, 0, 0, 0, 0, 0,
+    //   0, 0, 0, 0, 0, 0, 0, 0,
+    //   0, 0, 0, 0, 0, 0, 0, 0,
+    //   0, 0, 0, 0, 0, 0, 0, 0,
+    //   0, 0, 0, 0, 0, 0, 0, 0,
+    //   0, 0, 0, 0, 0, 0, 0, 0,
+    //   0, 0, 0, 0, 0, 0, 0, 0,
+    //   0, 0, 0, 0, 0, 1, 1, 1,
+    // ];
+    
+    // let king_pos_n = convert_bit_slice_to_u64(king_pos);
+    // let mult_n = convert_bit_slice_to_u64(mult);
+    // let king_idx = king_pos_n.leading_zeros();
+    // println!("{king_idx}");
+
+    // let left = ((king_pos_n & 0x7f7f7f7f7f7f7f7f) << 1);
+    // let upper_left = left << 8;
+    // let lower_left = left >> 8; 
+    // let right = ((king_pos_n & 0xfefefefefefefefe) >> 1);
+    // let upper_right = right << 8;
+    // let lower_right = right >> 8;
+    // let top = king_pos_n << 8;
+    // let bottom = king_pos_n >> 8;
+    // let res = left | upper_left | lower_left | right | upper_right | lower_right | top | bottom;
+    // print_board(res);
+
     // let l1:u64 = ((1 << (63 - 41)) >> 1) & 0x7f7f7f7f7f7f7f7f;
     // let l2:u64  = ((1 << (63 - 41)) >> 2) & 0x3f3f3f3f3f3f3f3f;
     // let r1: u64 = ((1 << (63 - 41)) << 1) & 0xfefefefefefefefe;

@@ -1,10 +1,11 @@
 use std::cmp::Ordering;
 use chesslib::chess::attack_bitmask::*;
+use chesslib::chess::consts::*;
 use bitvec::{prelude::*, view::BitView};
 fn convert_bit_slice_to_u64(bs: &BitSlice)->u64{
   let mut res:u64 = 0;
   for (i, x) in bs.to_bitvec().iter().enumerate(){
-    res |= (1 << (63 - i)) & (((*x) as u64) * u64::MAX);
+    res |= (1u64 << (63 - i)) & (((*x) as u64) * u64::MAX);
   }
   return res;
 }
@@ -234,4 +235,222 @@ fn test_rook_attack_mask(){
   println!("actual result:\n{}", board_to_string(r_attack_mask));
 
   assert_eq!(expected, r_attack_mask);
+}
+
+#[test]
+fn test_queen_attack_mask(){
+  let friend_mask_arr = bits![
+    0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 1, 0, 0, 0,
+    0, 1, 0, 1, 0, 0, 1, 0,
+    1, 0, 1, 0, 1, 1, 0, 1,
+    1, 1, 1, 1, 1, 0, 1, 1
+  ];
+  let foe_mask_arr = bits![
+    1, 1, 1, 1, 1, 0, 1, 1,
+    1, 1, 1, 0, 0, 1, 1, 1,
+    0, 0, 0, 1, 0, 0, 1, 0,
+    0, 0, 0, 0, 1, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0,
+  ];
+  let queen_mask_arr = bits![
+    0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 1, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0,
+  ];
+  let expected_result = bits![
+    0, 0, 0, 0, 0, 0, 0, 0,
+    0, 1, 0, 0, 0, 0, 0, 0,
+    0, 0, 1, 0, 0, 0, 1, 0,
+    0, 0, 0, 1, 1, 1, 0, 0,
+    1, 1, 1, 1, 0, 1, 1, 1,
+    0, 0, 0, 0, 1, 1, 0, 0,
+    0, 0, 0, 0, 0, 0, 1, 0,
+    0, 0, 0, 0, 0, 0, 0, 0,
+  ];
+  let expected = convert_bit_slice_to_u64(expected_result);
+  println!("expected result:\n{}", board_to_string(expected));
+  let friend_mask = convert_bit_slice_to_u64(friend_mask_arr);
+  let foe_mask = convert_bit_slice_to_u64(foe_mask_arr);
+  let queen_mask = convert_bit_slice_to_u64(queen_mask_arr);
+
+  let queen_attack_mask = queen_attack_mask(queen_mask, friend_mask, foe_mask);
+  println!("actual result:\n{}", board_to_string(queen_attack_mask));
+
+  assert_eq!(expected, queen_attack_mask);
+}
+
+
+#[test]
+fn test_king_attack_mask(){
+  let friend_mask_arr = bits![
+    0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 1, 0, 0, 0,
+    0, 1, 0, 1, 0, 0, 1, 0,
+    1, 0, 1, 0, 1, 1, 0, 1,
+    1, 1, 1, 1, 1, 0, 1, 1
+  ];
+  let foe_mask_arr = bits![
+    1, 1, 1, 1, 1, 0, 1, 1,
+    1, 1, 1, 0, 0, 1, 1, 1,
+    0, 0, 0, 1, 0, 0, 1, 0,
+    0, 0, 0, 0, 1, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0,
+  ];
+  let king_mask_arr = bits![
+    0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0,
+    1, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0,
+  ];
+  let expected_result = bits![
+    0, 0, 0, 0, 0, 0, 0, 0,
+    1, 1, 0, 0, 0, 0, 0, 0,
+    0, 1, 0, 0, 0, 0, 0, 0,
+    1, 1, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0,
+  ];
+  let expected = convert_bit_slice_to_u64(expected_result);
+  println!("expected result:\n{}", board_to_string(expected));
+  let friend_mask = convert_bit_slice_to_u64(friend_mask_arr);
+  let foe_mask = convert_bit_slice_to_u64(foe_mask_arr);
+  let king_mask = convert_bit_slice_to_u64(king_mask_arr);
+
+  let king_attack_mask = king_attack_mask(king_mask, friend_mask, foe_mask);
+  println!("actual result:\n{}", board_to_string(king_attack_mask));
+
+  assert_eq!(expected, king_attack_mask);
+}
+
+
+#[test]
+fn test_pawn_attack_mask(){
+  let friend_mask_arr = bits![
+    0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0,
+    1, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 1, 0, 0, 0,
+    0, 1, 0, 1, 0, 0, 1, 0,
+    1, 0, 1, 0, 1, 1, 0, 1,
+    1, 1, 1, 1, 1, 0, 1, 1
+  ];
+  let foe_mask_arr = bits![
+    1, 1, 1, 1, 1, 0, 1, 1,
+    1, 0, 1, 0, 0, 1, 1, 1,
+    0, 0, 0, 1, 0, 0, 1, 0,
+    0, 1, 0, 0, 1, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0,
+  ];
+  let pawn_mask_arr = bits![
+    0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0,
+    1, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0,
+  ];
+  let expected_result = bits![
+    0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0,
+    1, 1, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0,
+  ];
+  let expected = convert_bit_slice_to_u64(expected_result);
+  println!("expected result:\n{}", board_to_string(expected));
+  let friend_mask = convert_bit_slice_to_u64(friend_mask_arr);
+  let foe_mask = convert_bit_slice_to_u64(foe_mask_arr);
+  let pawn_mask = convert_bit_slice_to_u64(pawn_mask_arr);
+
+  let pawn_attack_mask = pawn_attack_mask(pawn_mask, friend_mask, foe_mask, Color::White, 17);
+  println!("actual result:\n{}", board_to_string(pawn_attack_mask));
+
+  assert_eq!(expected, pawn_attack_mask);
+}
+
+#[test]
+fn test_pawn_attack_mask_2(){
+  let foe_mask_arr = bits![
+    0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0,
+    0, 1, 0, 0, 1, 0, 0, 0,
+    1, 0, 0, 1, 0, 0, 1, 0,
+    0, 0, 1, 0, 1, 1, 0, 1,
+    1, 1, 1, 1, 1, 0, 1, 1
+  ];
+  let friend_mask_arr = bits![
+    1, 1, 1, 1, 1, 0, 1, 1,
+    1, 0, 1, 0, 0, 1, 1, 1,
+    0, 0, 0, 1, 0, 0, 1, 0,
+    0, 1, 0, 0, 1, 0, 0, 0,
+    1, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0,
+  ];
+  let pawn_mask_arr = bits![
+    0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0,
+    1, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0,
+  ];
+  let expected_result = bits![
+    0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0,
+    0, 1, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0,
+  ];
+  let expected = convert_bit_slice_to_u64(expected_result);
+  println!("expected result:\n{}", board_to_string(expected));
+  let friend_mask = convert_bit_slice_to_u64(friend_mask_arr);
+  let foe_mask = convert_bit_slice_to_u64(foe_mask_arr);
+  let pawn_mask = convert_bit_slice_to_u64(pawn_mask_arr);
+
+  let pawn_attack_mask = pawn_attack_mask(pawn_mask, friend_mask, foe_mask, Color::Black, 41);
+  println!("actual result:\n{}", board_to_string(pawn_attack_mask));
+
+  assert_eq!(expected, pawn_attack_mask);
 }

@@ -82,19 +82,20 @@ const fn ray_cache()->[u8; 65536]{
 
 const fn king_cache()->[u64; 64]{
   let mut cache:[u64; 64] = [0; 64];
-  let mut i:u8 = 0;
-  let offset = [-9, -8, -7, -1, 1, 7, 8, 9];
-  while i<64 {
-    let mut j = 0;
-    while j < 8 {
-      let target_pos:i8 = i as i8 + offset[j];
-      let col_diff:i8 = ((i % 8) as i8) - (target_pos % 8) as i8;
-      if target_pos < 64 && target_pos >= 0 && (col_diff.abs() == 1){
-        cache[i as usize] |= 1 << (63 - target_pos);
-      }
-      j+=1;
-    }
-    i+=1;
+  let mut king_idx:u8 = 0;
+
+  while king_idx<64 {
+    let king_bitmask = (1u64 << (63 - king_idx));
+    let left = ((king_bitmask & 0x7f7f7f7f7f7f7f7f) << 1);
+    let upper_left = left << 8;
+    let lower_left = left >> 8; 
+    let right = ((king_bitmask & 0xfefefefefefefefe) >> 1);
+    let upper_right = right << 8;
+    let lower_right = right >> 8;
+    let top = king_bitmask << 8;
+    let bottom = king_bitmask >> 8;
+    cache[king_idx as usize] = left | upper_left | lower_left | right | upper_right | lower_right | top | bottom;
+    king_idx+=1;
   }
   return cache;
 }
