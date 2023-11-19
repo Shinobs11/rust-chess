@@ -205,9 +205,61 @@ impl IndexMut<Piece> for BitBoardSet {
       }
   }
 }
+
+#[derive(Clone, Debug)]
+pub struct ColorMasks {
+  pub white: u64,
+  pub black: u64
+}
+impl Index<Color> for ColorMasks {
+  type Output = u64;
+  fn index(&self, index: Color) -> &Self::Output {
+      match index {
+        Color::White => &self.white,
+        Color::Black => &self.black
+      }
+  }
+}
+impl IndexMut<Color> for ColorMasks {
+  fn index_mut(&mut self, index: Color) -> &mut Self::Output {
+      match index {
+          Color::White => &mut self.white,
+          Color::Black => &mut self.black
+      }
+  }
+}
+impl Index<bool> for ColorMasks {
+  type Output = u64;
+  fn index(&self, index: bool) -> &Self::Output {
+      match index {
+        false => &self.white,
+        true => &self.black
+      }
+  }
+}
+impl IndexMut<bool> for ColorMasks {
+  fn index_mut(&mut self, index: bool) -> &mut Self::Output {
+      match index {
+        false => &mut self.white,
+        true => &mut self.black
+      }
+  }
+}
+impl Default for ColorMasks {
+    fn default() -> Self {
+        ColorMasks { white: 0, black: 0 }
+    }
+}
+impl ColorMasks {
+  fn empty_default() -> Self {
+    ColorMasks { white: 0, black: 0 }
+  }
+}
+
 #[derive(Clone, Debug)]
 pub struct Board {
     pub bbs: BitBoardSet,
+    pub color_masks: ColorMasks,
     pub piece_set: PieceSet,
     pub castle_state: CastlingRights,
     pub en_pessant_sq: u8,
@@ -218,6 +270,7 @@ impl Board {
     pub fn empty_default() -> Self {
         Board {
             bbs: BitBoardSet::empty_default(),
+            color_masks: ColorMasks::empty_default(),
             piece_set: PieceSet::empty_default(),
             castle_state: CastlingRights::default(),
             en_pessant_sq: 255,
@@ -251,6 +304,7 @@ impl Default for Board {
     fn default() -> Self {
         Board {
             bbs: BitBoardSet::default(),
+            color_masks: ColorMasks::default(),
             piece_set: PieceSet::default(),
             castle_state: CastlingRights::default(),
             en_pessant_sq: 255,
@@ -387,17 +441,30 @@ impl Board {
     }
 }
 
+
+//TODOs: this might be more efficient to use a single u16 than a struct with 3 u8s
+
 pub struct Move {
     //0 = normal move, 1 = castle, 2 = en pessant
-    pub kind: u8,
+    kind: u8,
     //if kind == 0, index of selected piece
     //if kind == 1, short castle = 0, long castle = 1
     //if kind == 2, index of selected pawn
-    pub arg1: u8,
+    arg1: u8,
     //if kind == 0, index of target square
     //if kind == 1, empty
     //if kind == 2 empty
-    pub arg2: u8,
+    arg2: u8,
+}
+impl Move {
+  #[inline(always)]
+  pub fn new(kind: u8, arg1: u8, arg2: u8)->Self {Self {kind, arg1, arg2}}
+  #[inline(always)]
+  pub fn kind(&mut self) -> u8 {self.kind}
+  #[inline(always)]
+  pub fn arg1(&mut self) -> u8 {self.arg1}
+  #[inline(always)]
+  pub fn arg2(&mut self) -> u8 {self.arg2}
 }
 impl Default for Move {
     fn default() -> Self {

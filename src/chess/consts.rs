@@ -1,5 +1,5 @@
 use num_enum::{IntoPrimitive, FromPrimitive};
-
+use std::ops::*;
 #[derive(IntoPrimitive, FromPrimitive, Clone, Copy)]
 #[repr(u8)]
 pub enum Piece {
@@ -32,11 +32,20 @@ pub enum GenericPiece {
   Empty = 6
 }
 #[derive(IntoPrimitive, FromPrimitive, Clone, Copy, PartialEq, Eq)]
-#[repr(i8)]
+#[repr(u8)]
 pub enum Color {
   #[default]
   White = 0,
   Black = 1
+}
+impl Not for Color {
+  type Output = Color;
+  fn not(self) -> Self::Output {
+    match self {
+      Color::White => Color::Black,
+      Color::Black => Color::White
+    }
+  }
 }
 
 pub const PIECE_CHAR_MAP: [char; 13] = ['K', 'Q', 'R', 'B', 'N', 'P', 'k', 'q', 'r', 'b', 'n', 'p', '#'];
@@ -58,6 +67,9 @@ pub const DEFAULT_BOARD:[Piece; 64] = [
   Piece::WPawn, Piece::WPawn, Piece::WPawn, Piece::WPawn, Piece::WPawn, Piece::WPawn, Piece::WPawn, Piece::WPawn,
   Piece::WRook, Piece::WKnight, Piece::WBishop, Piece::WQueen, Piece::WKing, Piece::WBishop, Piece::WKnight, Piece::WRook
 ];
+
+
+
 
 pub const default_pieces:[u8;32] = [
   60, //white king

@@ -125,6 +125,7 @@ pub fn bishop_attack_mask(piece_mask: u64, friendly_pos_mask: u64, opponent_pos_
 
   return (pos_diag_mask & expanded_pos_ray) | (neg_diag_mask & expanded_neg_ray);
 }
+
 pub fn batch_bishop_attack_mask(v: &Vec<(u64, u64, u64)>)->Vec<u64>{
   let mut res:Vec<u64> = Vec::<u64>::with_capacity(v.len());
   for (piece_mask, friend_mask, foe_mask) in v {
