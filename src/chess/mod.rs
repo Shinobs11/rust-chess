@@ -11,3 +11,4 @@ pub mod consts;
 pub mod types;
 pub mod attack_bitmask;
 pub mod check;
+pub mod util;

@@ -14,12 +14,12 @@ pub const fn right_shift(v:u64, n:u8)->u64{
 #[inline]
 pub const fn get_row_mask(bb: u64, row_idx: u8)->u8{
   //because msb is index 0, we need to shift by (7 - row_idx)*8;
-  return ((bb >> ((7 - row_idx) * 8)) & (u8::MAX as u64)) as u8;
+  return (bb >> ((7 - row_idx) * 8)) as u8;
 }
 
 #[inline]
 pub const fn put_row_mask(bb_row: u8, row_idx: u8)->u64{
-  return ((bb_row as u64) << ((7-row_idx) * 8));
+  return (bb_row as u64) << ((7-row_idx) * 8);
 
 }
 
@@ -38,15 +38,15 @@ along a row axis.
 const COLUMN_MASK:u64 = 0x8080808080808080u64;
 const GET_COL_MAGIC:u64 = 0x2040810204081u64;
 #[inline]
-pub fn get_col_mask(bb: u64, col: u8)->u8 {
-  let mut column = (bb << col) & COLUMN_MASK;
+pub fn get_col_mask(bb: u64, col_idx: u8)->u8 {
+  let mut column = (bb << col_idx) & COLUMN_MASK;
   column *= GET_COL_MAGIC;
-  return ((column >> 56) & 0xff) as u8;
+  return (column >> 56) as u8;
 }
 
 #[inline]
-pub fn put_col_mask(bb_col: u8, col: u8) -> u64 {
-  return ((bb_col as u64 * GET_COL_MAGIC) & 0x0101010101010101) << (7 - col);
+pub fn put_col_mask(bb_col: u8, col_idx: u8) -> u64 {
+  return ((bb_col as u64 * GET_COL_MAGIC) & 0x0101010101010101) << (7 - col_idx);
 }
 
 #[inline]
@@ -54,14 +54,16 @@ pub fn get_ternary_bitmask(piece_idx: u8, friend_mask: u8, foe_mask: u8)->u16{
   return ((piece_idx as u16)  << 13) | (TERNARY_CACHE[friend_mask as usize] as u16 + 2 * TERNARY_CACHE[foe_mask as usize] as u16);
 }
 
+//TODOS: Try to find a magic number that eliminates the need for the right shift by 56.
+//if i can, the it's just a free op saved.
 pub const GET_DIAG_MASK_MAGIC:u64 = 0x101010101010101;
 #[inline]
-pub fn get_pos_diag_mask(bb:u64, piece_idx: u8)->u8{
-  return (((bb & DIAG_MASK_CACHE[2*(piece_idx as usize)]) * GET_DIAG_MASK_MAGIC) >> 56) as u8;
+pub fn get_pos_diag_mask(piece_idx: u8)->u64{
+  return DIAG_MASK_CACHE[2*(piece_idx as usize)];
 }
 
 #[inline]
-pub fn get_neg_diag_mask(bb:u64, piece_idx: u8)->u8{
-  return (((bb & DIAG_MASK_CACHE[2*(piece_idx as usize) + 1]) * GET_DIAG_MASK_MAGIC) >> 56) as u8;
+pub fn get_neg_diag_mask(piece_idx: u8)->u64{
+  return DIAG_MASK_CACHE[2*(piece_idx as usize) + 1];
 }
 

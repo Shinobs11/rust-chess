@@ -107,15 +107,15 @@ pub fn batch_knight_attack_mask(v: &Vec<(u64, u64, u64)>)->Vec<u64>{
 
 
 
-pub fn bishop_attack_mask(piece_mask: u64, friendly_pos_mask: u64, opponent_pos_mask: u64)->u64{
+pub fn bishop_attack_mask(piece_mask: u64, f_mask: u64, o_mask: u64)->u64{
   let piece_idx = piece_mask.leading_zeros();
   let pos_diag_mask = DIAG_MASK_CACHE[(2 * piece_idx) as usize];
   let neg_diag_mask = DIAG_MASK_CACHE[((2 * piece_idx) + 1) as usize];
 
-  let f_pos_diag_mask = (((friendly_pos_mask & pos_diag_mask) * GET_DIAG_MASK_MAGIC) >> 56) as u8;
-  let f_neg_diag_mask = (((friendly_pos_mask & neg_diag_mask) * GET_DIAG_MASK_MAGIC) >> 56) as u8;
-  let o_pos_diag_mask = (((opponent_pos_mask & pos_diag_mask) * GET_DIAG_MASK_MAGIC) >> 56) as u8;
-  let o_neg_diag_mask = (((opponent_pos_mask & neg_diag_mask) * GET_DIAG_MASK_MAGIC) >> 56) as u8;
+  let f_pos_diag_mask = (((f_mask & pos_diag_mask) * GET_DIAG_MASK_MAGIC) >> 56) as u8;
+  let f_neg_diag_mask = (((f_mask & neg_diag_mask) * GET_DIAG_MASK_MAGIC) >> 56) as u8;
+  let o_pos_diag_mask = (((o_mask & pos_diag_mask) * GET_DIAG_MASK_MAGIC) >> 56) as u8;
+  let o_neg_diag_mask = (((o_mask & neg_diag_mask) * GET_DIAG_MASK_MAGIC) >> 56) as u8;
 
   let pos_ray = RAY_CACHE[get_ternary_bitmask((piece_idx % 8) as u8, f_pos_diag_mask , o_pos_diag_mask) as usize];
   let neg_ray = RAY_CACHE[get_ternary_bitmask((piece_idx % 8) as u8, f_neg_diag_mask, o_neg_diag_mask) as usize];
@@ -200,7 +200,7 @@ pub fn queen_attack_mask(piece_mask: u64, friendly_pos_mask: u64, opponent_pos_m
                     + 2*TERNARY_CACHE[get_col_mask(opponent_pos_mask, piece_col_idx) as usize]
                     | ((piece_row_idx as u16) << 13);
 
-  //bit of a gotcha, need to provide piece_col_idx to index row_attack_mask and vice versa
+  
   let row_attack_mask: u8 = RAY_CACHE[row_mask as usize];
   let col_attack_mask: u8 = RAY_CACHE[col_mask as usize];
 
@@ -239,6 +239,7 @@ pub fn batch_queen_attack_mask(v: &Vec<(u64, u64, u64)>)->Vec<u64>{
 // A. I ignore the possibility of check and handle it later
 // B. I handle check in the mask
 // as I simply don't have enough information, being passed into the function, I'm obv going to choose A.
+
 pub fn king_attack_mask(piece_mask: u64, friendly_pos_mask: u64, opponent_pos_mask: u64)->u64 {
   //There is an opportunity for caching to be beneficial here, but I'm not sure if it'd be worth while
   //after all, there's like 32 ops in total here. 

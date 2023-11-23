@@ -7,6 +7,8 @@ use std::{arch::x86_64::_popcnt64, ops::Shl, ops::Shr};
 use Which::{First, Second};
 use chesslib::cache::*;
 use chesslib::chess::bit::*;
+use chesslib::chess::check::is_king_in_check;
+use chesslib::chess::chess::parse_fens;
 use chesslib::chess::consts::*;
 use chesslib::chess::types::*;
 use chesslib::chess::attack_bitmask::*;
@@ -23,48 +25,9 @@ pub type BitBoard = u64;
 fn main() {
   let s = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 
-//   pub const default_pieces:[u8;32] = [
-//   60, //white king
-//   59, //white queen
-//   63, 56, //white rooks
-//   61, 58, //white bishops
-//   62, 57, //white knights
-//   47, 48, 49, 50, 51, 52, 53, 54, //white pawns
-//   4, //black king
-//   3, //black queen
-//   0, 7, //black rooks
-//   2, 5, //black bishops
-//   1, 6, //black knights
-//   8, 9, 10, 11, 12, 13, 14, 15 //black pawns
-// ];
 
 
 
-  // const W_KING_DEFAULT_MASK: u64 = (1 << (63 - 60));
-  // const W_QUEEN_DEFAULT_MASK: u64 = (1 << (63 - 59));
-  // const W_ROOK_DEFAULT_MASK: u64 = (1 << (63 - 63)) | (1 << (63 - 56));
-  // const W_BISHOP_DEFAULT_MASK: u64 = (1 << (63 - 61)) | (1 << (63 - 58));
-  // const W_KNIGHT_DEFAULT_MASK: u64 = (1 << (63 - 62)) | (1 << (63 - 57));
-  // const W_PAWN_DEFAULT_MASK: u64 = (1 << (63 - 47)) | (1 << (63 - 48)) | (1 << (63 - 49)) | (1 << (63 - 50)) | (1 << (63 - 51)) | (1 << (63 - 52)) | (1 << (63 - 53)) | (1 << (63 - 54));
-
-  // const B_KING_DEFAULT_MASK: u64 = (1 << (63 - 4));
-  // const B_QUEEN_DEFAULT_MASK: u64 = (1 << (63 - 3));
-  // const B_ROOK_DEFAULT_MASK: u64 = (1 << (63 - 0)) | (1 << (63 - 7));
-  // const B_BISHOP_DEFAULT_MASK: u64 = (1 << (63 - 2)) | (1 << (63 - 5));
-  // const B_KNIGHT_DEFAULT_MASK: u64 = (1 << (63 - 1)) | (1 << (63 - 6));
-  // const B_PAWN_DEFAULT_MASK: u64 = (1 << (63 - 8)) | (1 << (63 - 9)) | (1 << (63 - 10)) | (1 << (63 - 11)) | (1 << (63 - 12)) | (1 << (63 - 13)) | (1 << (63 - 14)) | (1 << (63 - 15));
-
-  // let rook_mask:BitBoard =      0b0000000000000000000000000000000000000000010000000000000000000000;
-  // let bishop_mask:BitBoard =    0b0000000000000000000000000000000000001000000000000000000000000000;
-  // println!("{}", bishop_mask.leading_zeros());
-  // // let rook_mask:BitBoard = 0b0000000000000010000000000000000000000000000000000000000000000000;
-  // let white_mask:BitBoard =     0b0000000000000000000000000000010000000000000000011111111111111111;
-  // let mut black_mask:BitBoard =     0b0100000101000001000000000000000000000000000100000000000000000000;
-  // black_mask |= bishop_mask << 17;
-  // black_mask |= bishop_mask << 15;
-  // black_mask |= bishop_mask << 10;
-  // black_mask |= bishop_mask << 6;
-  
 
 
 
@@ -99,7 +62,7 @@ fn main() {
   // let ter = (TERNARY_CACHE[friend as usize] + 2 * TERNARY_CACHE[foe as usize]) | ((rook_idx as u16) << 13);
   // let res = RAY_CACHE[row_mask as usize];
   // // // let rc = ray_cache();
-  // println!("{:#010b}", res);
+
 
   // let mut n = 0;
   // for i in RAY_CACHE.iter() {
@@ -308,6 +271,14 @@ fn convert_bit_slice_to_u64(bs: &BitSlice)->u64{
     // print_board(h2);
     // println!(); 
     // print_board((h1 << 16) | (h1 >> 16) | (h2 << 8) | (h2 >> 8));
+
+
+  let b = Board::board_from_fen("r4rk1/pb3pp1/1p2p2p/2Pq2P1/1b2N2P/4PP2/PpQ5/2KR2NR w - - 0 17".to_string());
+  // print_board(b.color_masks[Color::White]);
+  // print_board(b.color_masks[Color::Black]);
+  println!("{}", b);
+  let x = is_king_in_check(Color::White, b);
+  println!("{}", x);
 
 
 }

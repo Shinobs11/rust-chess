@@ -1,8 +1,10 @@
+use crate::chess::chess::san_square_to_index;
 use crate::chess::consts::*;
 use num_enum::FromPrimitive;
 use std::collections::HashSet;
 use std::fmt::Display;
 use std::hash::Hash;
+use std::ascii::*;
 use std::ops::{Index, IndexMut};
 use bitvec::{prelude::*, view::BitView};
 
@@ -205,6 +207,49 @@ impl IndexMut<Piece> for BitBoardSet {
       }
   }
 }
+impl Index<u8> for BitBoardSet {
+  type Output = u64;
+  fn index(&self, index: u8) -> &Self::Output {
+      match index {
+          0 => &self.w_king,
+          2 => &self.w_queen,
+          4 => &self.w_rook,
+          6 => &self.w_bishop,
+          8 => &self.w_knight,
+          10 => &self.w_pawn,
+          1 => &self.b_king,
+          3 => &self.b_queen,
+          5 => &self.b_rook,
+          7 => &self.b_bishop,
+          9 => &self.b_knight,
+          11 => &self.b_pawn,
+          12_u8..=u8::MAX => unimplemented!(),
+      }
+  }
+}
+impl IndexMut<u8> for BitBoardSet {
+  fn index_mut(&mut self, index: u8) -> &mut Self::Output {
+      match index {
+          0 => &mut self.w_king,
+          2 => &mut self.w_queen,
+          4 => &mut self.w_rook,
+          6 => &mut self.w_bishop,
+          8 => &mut self.w_knight,
+          10 => &mut self.w_pawn,
+          1 => &mut self.b_king,
+          3 => &mut self.b_queen,
+          5 => &mut self.b_rook,
+          7 => &mut self.b_bishop,
+          9 => &mut self.b_knight,
+          11 => &mut self.b_pawn,
+          12_u8..=u8::MAX => unimplemented!(),
+      }
+  }
+}
+
+
+
+
 
 #[derive(Clone, Debug)]
 pub struct ColorMasks {
@@ -353,6 +398,8 @@ impl Display for Board {
         for i in (0..8) {
           for j in (0..8) {
             bitboard_str.push(sq_str[i*8 + j] as char);
+            bitboard_str.push(' ');
+
           }
           bitboard_str.push('\n');
         }
@@ -405,10 +452,22 @@ impl Board {
                     'B' => set_pos(&mut board, Piece::WBishop.into(), &mut idx),
                     'N' => set_pos(&mut board, Piece::WKnight.into(), &mut idx),
                     'P' => set_pos(&mut board, Piece::WPawn.into(), &mut idx),
-                    _ => {}
+                     _ => {
+                      idx += c as u8 - '0' as u8
+                    }
                 }
             }
         }
+
+        for piece in WHITE_PIECES {
+          board.color_masks[Color::White] |= board.bbs[piece];
+        }
+
+        for piece in BLACK_PIECES {
+          board.color_masks[Color::Black] |= board.bbs[piece];
+        }
+        
+        
 
         let turn_char = fen_vec[1].chars().nth(0).unwrap();
         if turn_char == 'w' {
@@ -431,10 +490,7 @@ impl Board {
         if en_pessant_str.contains('-') {
             board.en_pessant_sq = 255;
         } else {
-            board.en_pessant_sq = match u8::from_str_radix(fen_vec[3], 10) {
-                Ok(x) => x,
-                Err(err) => panic!("Invalid FEN: Invalid en pessant square provided {}", err),
-            };
+            board.en_pessant_sq = san_square_to_index(fen_vec[3].as_ascii().unwrap());
         }
 
         return board;
