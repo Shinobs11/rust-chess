@@ -1,55 +1,83 @@
-
-
-use std::{str::*, slice::Chunks};
-
-use std::iter::*;
-use std::collections::HashMap;
-
-
-use num_enum::{TryFromPrimitive, FromPrimitive};
-
+use crate::chess::*;
+use crate::chess::attack_bitmask::*;
 use crate::chess::consts::*;
 use crate::chess::types::*;
-use std::fs::File;
-use std::io::prelude::*;
-use std::path::Path;
-use std::ascii::*;
 
-pub fn retrieve_fens(path: String, out:&mut Vec<String>){
-  let p = Path::new(&path);
-  let display = path.to_string();
-  let mut file = match File::open(p) {
-    Err(why) => panic!("couldn't open {}: {}", display, why),
-    Ok(file) => file
-  };
 
-  let mut s = String::new();
-  match file.read_to_string(&mut s) {
-    Err(why) => panic!("couldn't read {}: {}", display, why),
-    Ok(_) => {},
-  }
 
+
+const KIND_NORMAL:u8 = 0;
+const KIND_CASTLE:u8 = 1;
+const KIND_EN_PESSANT:u8 = 2;
+
+
+
+
+
+fn make_move(mut board: Board, mov: Move) -> bool{
   
-  for x in s.split('\n').into_iter(){
-    out.push(x.to_string());
-  };
-}
 
 
-pub fn parse_fens(strs: &Vec<String>)->Vec<Board>{
-  let mut boards = Vec::<Board>::with_capacity(strs.len());
-  for s in strs {
-    boards.push(Board::board_from_fen(s.to_string()));
+  //First we need to check if the move is legal
+  if (mov.piece as u8 % 2) != (board.turn as u8) {
+    return false;
   }
-  return boards;
-}
+  let piece_mask = 1u64 << (63 - mov.arg1);
+  let piece_bb = board.bbs[mov.piece];
+  if (piece_bb & piece_mask) == 0 {
+    return false;
+  }
+
+  if mov.kind == KIND_NORMAL {
+
+
+    let attack_mask = match mov.piece {
+      Piece::WKing => king_attack_mask(piece_mask, board.color_masks[board.turn] , board.color_masks[!board.turn]),
+      Piece::BKing => king_attack_mask(piece_mask, board.color_masks[board.turn] , board.color_masks[!board.turn]),
+      Piece::WQueen => queen_attack_mask(piece_mask, board.color_masks[board.turn] , board.color_masks[!board.turn]),
+      Piece::BQueen => queen_attack_mask(piece_mask, board.color_masks[board.turn] , board.color_masks[!board.turn]),
+      Piece::WRook => rook_attack_mask(piece_mask, board.color_masks[board.turn] , board.color_masks[!board.turn]),
+      Piece::BRook => rook_attack_mask(piece_mask, board.color_masks[board.turn] , board.color_masks[!board.turn]),
+      Piece::WBishop => bishop_attack_mask(piece_mask, board.color_masks[board.turn] , board.color_masks[!board.turn]),
+      Piece::BBishop => bishop_attack_mask(piece_mask, board.color_masks[board.turn] , board.color_masks[!board.turn]),
+      Piece::WKnight => knight_attack_mask(piece_mask, board.color_masks[board.turn]),
+      Piece::BKnight => knight_attack_mask(piece_mask, board.color_masks[board.turn]),
+      Piece::WPawn => pawn_attack_mask(piece_mask, board.color_masks[board.turn] , board.color_masks[!board.turn], board.turn, board.en_pessant_sq),
+      Piece::BPawn => pawn_attack_mask(piece_mask, board.color_masks[board.turn] , board.color_masks[!board.turn], board.turn, board.en_pessant_sq)
+      Piece::Empty => unimplemented!()
+    };
+
+    let target_mask = 1u64 << (63 - mov.arg2);
+    if (target_mask & attack_mask) > 0 {
+      //here i'm making the move and then checking if the king would be in check as a result
+      //there may be opportunity to optimize here
+      board.bbs[mov.piece] = (board.bbs[mov.piece] & !piece_mask) | target_mask;
+      board.bbs[mov.piece]
+    }
+
+
+    
+    
 
 
 
-pub fn san_square_to_index(s: &[Char]) -> u8{
-  let first = s[0] as u8 - 'a' as u8;
-  let second = s[1] as u8 - '1' as u8;
-  return (7 - first) * 8 + second;
+
+
+
+    return false;
+  }
+  else if mov.kind == KIND_CASTLE {
+
+    return false;
+  }
+  else {
+    return false;
+  }
+
+
+
+
+
 }
 
 

@@ -1,4 +1,4 @@
-use crate::chess::chess::san_square_to_index;
+use crate::chess::util::san_square_to_index;
 use crate::chess::consts::*;
 use num_enum::FromPrimitive;
 use std::collections::HashSet;
@@ -308,7 +308,7 @@ pub struct Board {
     pub piece_set: PieceSet,
     pub castle_state: CastlingRights,
     pub en_pessant_sq: u8,
-    pub turn: u8, // 0: white, 1: black
+    pub turn: Color, // 0: white, 1: black
     pub draw_count: u8,
 }
 impl Board {
@@ -319,7 +319,7 @@ impl Board {
             piece_set: PieceSet::empty_default(),
             castle_state: CastlingRights::default(),
             en_pessant_sq: 255,
-            turn: 0,
+            turn: Color::White,
             draw_count: 0,
         }
     }
@@ -353,7 +353,7 @@ impl Default for Board {
             piece_set: PieceSet::default(),
             castle_state: CastlingRights::default(),
             en_pessant_sq: 255,
-            turn: 0,
+            turn: Color::White,
             draw_count: 0,
         }
     }
@@ -471,9 +471,9 @@ impl Board {
 
         let turn_char = fen_vec[1].chars().nth(0).unwrap();
         if turn_char == 'w' {
-            board.turn = 0;
+            board.turn = Color::White;
         } else if turn_char == 'b' {
-            board.turn = 1;
+            board.turn = Color::Black;
         } else {
             panic!("Invalid FEN: Invalid turn character provided {}", turn_char);
         }
@@ -498,34 +498,39 @@ impl Board {
 }
 
 
-//TODOs: this might be more efficient to use a single u16 than a struct with 3 u8s
 
+
+
+// pub struct Move(u16);
+// impl Move {
+//   #[inline(always)]
+//   pub fn new(piece: u8, kind: u8, arg1: u8, arg2: u8) -> Self{
+
+//     Self((piece as u16) << 12) | ((kind as u16) << 8) | ((arg1 as u16) << ))
+//   }
+// }
+//TODOs: this might be more efficient to use a single u16 than a struct with 4 u8s
 pub struct Move {
     //0 = normal move, 1 = castle, 2 = en pessant
-    kind: u8,
-    //if kind == 0, index of selected piece
-    //if kind == 1, short castle = 0, long castle = 1
-    //if kind == 2, index of selected pawn
-    arg1: u8,
-    //if kind == 0, index of target square
-    //if kind == 1, empty
-    //if kind == 2 empty
-    arg2: u8,
+    pub kind: u8,
+    pub piece: Piece,
+
+    //index of selected piece
+    pub arg1: u8,
+    // if kind==0, then arg2 is index of target square
+    // if kind==1, then arg2 is short castle = 0 and long castle = 1
+    // if kind==2, no value needed
+    pub arg2: u8,
 }
 impl Move {
   #[inline(always)]
-  pub fn new(kind: u8, arg1: u8, arg2: u8)->Self {Self {kind, arg1, arg2}}
-  #[inline(always)]
-  pub fn kind(&mut self) -> u8 {self.kind}
-  #[inline(always)]
-  pub fn arg1(&mut self) -> u8 {self.arg1}
-  #[inline(always)]
-  pub fn arg2(&mut self) -> u8 {self.arg2}
+  pub fn new(kind: u8, piece: Piece, arg1: u8, arg2: u8)->Self {Self { kind, piece, arg1, arg2}}
 }
 impl Default for Move {
     fn default() -> Self {
         Move {
             kind: 0,
+            piece: Piece::WKing,
             arg1: 0,
             arg2: 0,
         }

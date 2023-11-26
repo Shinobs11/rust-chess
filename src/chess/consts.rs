@@ -31,7 +31,7 @@ pub enum GenericPiece {
   #[num_enum(default)]
   Empty = 6
 }
-#[derive(IntoPrimitive, FromPrimitive, Clone, Copy, PartialEq, Eq)]
+#[derive(IntoPrimitive, FromPrimitive, Clone, Copy, PartialEq, Eq, Debug)]
 #[repr(u8)]
 pub enum Color {
   #[default]
