@@ -1,2 +1,2 @@
-criterion_home = "./bench_results"
+criterion_home = "../bench_results"
 output_format = "verbose"

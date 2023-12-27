@@ -8,7 +8,7 @@ criterion = "0.5.1"
 
 
 [[bench]]
-name = "attack_bitmask_bench"
+name = "bench"
 harness = false
 
 
@@ -17,10 +17,12 @@ harness = false
 name = "chesslib"
 path = "src/lib.rs"
 build = "src/cache/build.rs"
+bench = false
 
 [[bin]]
 name = "main"
 path = "src/main.rs"
+bench = false
 
 [dependencies]
 ary = "0.1.0"

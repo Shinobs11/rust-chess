@@ -1,4 +1,4 @@
-use criterion::{criterion_group, criterion_main, Criterion};
+use criterion::{black_box, criterion_group, criterion_main, Criterion};
 use num_enum::FromPrimitive;
 use chesslib::chess::consts::*;
 use chesslib::chess::types::*;
@@ -7,8 +7,80 @@ use chesslib::chess::chess::*;
 use chesslib::chess::util::*;
 pub type BitBoard = u64;
 
+pub fn batch_pawn_attack_mask(v: &Vec<(u64, u64, u64, Color, u8)>)->Vec<u64>{
+  let mut res:Vec<u64> = Vec::<u64>::with_capacity(v.len());
+  for (piece_mask, friend_mask, foe_mask, color, ep_square) in v {
+    res.push(pawn_attack_mask(*piece_mask, *friend_mask, *foe_mask, *color, *ep_square));
+  }
+  return res;
+}
 
-pub fn attack_bitmask_benchmark(c: &mut Criterion) {
+pub fn batch_knight_attack_mask(v: &Vec<(u64, u64, u64)>)->Vec<u64>{
+  let mut res:Vec<u64> = Vec::<u64>::with_capacity(v.len());
+  for (piece_mask, friend_mask, foe_mask) in v {
+    res.push(knight_attack_mask(*piece_mask, *friend_mask));
+  }
+  return res;
+}
+
+
+pub fn batch_bishop_attack_mask(v: &Vec<(u64, u64, u64)>)->Vec<u64>{
+  let mut res:Vec<u64> = Vec::<u64>::with_capacity(v.len());
+  for (piece_mask, friend_mask, foe_mask) in v {
+    res.push(bishop_attack_mask(*piece_mask, *friend_mask, *foe_mask));
+  }
+  return res;
+}
+
+pub fn batch_rook_attack_mask(v: &Vec<(u64, u64, u64)>)->Vec<u64>{
+  let mut res:Vec<u64> = Vec::<u64>::with_capacity(v.len());
+  for (piece_mask, friend_mask, foe_mask) in v {
+    res.push(rook_attack_mask(*piece_mask, *friend_mask, *foe_mask));
+  }
+  return res;
+}
+
+pub fn batch_queen_attack_mask(v: &Vec<(u64, u64, u64)>)->Vec<u64>{
+  let mut res:Vec<u64> = Vec::<u64>::with_capacity(v.len());
+  for (piece_mask, friend_mask, foe_mask) in v {
+    res.push(queen_attack_mask(*piece_mask, *friend_mask, *foe_mask));
+  }
+  return res;
+}
+
+pub fn batch_king_attack_mask(v: &Vec<(u64, u64, u64)>)->Vec<u64>{
+  let mut res:Vec<u64> = Vec::<u64>::with_capacity(v.len());
+  for (piece_mask, friend_mask, foe_mask) in v {
+    res.push(king_attack_mask(*piece_mask, *friend_mask, *foe_mask));
+  }
+  return res;
+}
+
+
+pub fn batch_all_attack_mask(v: &Vec<(u64, u64, u64, GenericPiece)>)-> Vec<u64> {
+  let mut res: Vec<u64> = Vec::<u64>::with_capacity(v.len());
+  for x in v {
+    let piece_mask = x.0;
+    let friend_mask = x.1;
+    let foe_mask = x.2;
+    let piece_type = x.3;
+
+    let r = match piece_type {
+      GenericPiece::King => 0,
+      GenericPiece::Queen => queen_attack_mask(piece_mask, friend_mask, foe_mask),
+      GenericPiece::Rook => rook_attack_mask(piece_mask, friend_mask, foe_mask),
+      GenericPiece::Bishop => bishop_attack_mask(piece_mask, friend_mask, foe_mask),
+      GenericPiece::Knight => knight_attack_mask(piece_mask, friend_mask),
+      GenericPiece::Pawn => 0,
+      GenericPiece::Empty => 0
+    };
+    res.push(r);
+  }
+  return res;
+
+}
+
+fn _benchmark(c: &mut Criterion) {
   
   fn get_position_masks(path: &str, target_piece: GenericPiece)->Vec<(u64, u64, u64)> {
     let mut fen_vec: Vec<String> = vec![];
@@ -107,9 +179,4 @@ pub fn attack_bitmask_benchmark(c: &mut Criterion) {
 
 
 
-criterion_group!{
-  name = attack_bitmask_bench;
-  config = Criterion::default();
-  targets = attack_bitmask_benchmark
-}
-criterion_main!(attack_bitmask_bench);
+criterion_group!(attack_bitmask_benchmark, _benchmark);
