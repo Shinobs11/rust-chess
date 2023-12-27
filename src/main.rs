@@ -8,7 +8,6 @@ use Which::{First, Second};
 use chesslib::cache::*;
 use chesslib::chess::bit::*;
 use chesslib::chess::check::is_king_in_check;
-use chesslib::chess::chess::parse_fens;
 use chesslib::chess::consts::*;
 use chesslib::chess::types::*;
 use chesslib::chess::attack_bitmask::*;
@@ -37,9 +36,6 @@ fn convert_bit_slice_to_u64(bs: &BitSlice)->u64{
   let b = Board::board_from_fen("r4rk1/pb3pp1/1p2p2p/2Pq2P1/1b2N2P/4PP2/PpQ5/2KR2NR w - - 0 17".to_string());
   // print_board(b.color_masks[Color::White]);
   // print_board(b.color_masks[Color::Black]);
-  println!("{}", b);
-  let x = is_king_in_check(Color::White, b);
-  println!("{}", x);
 
   let m = Move::default();
   

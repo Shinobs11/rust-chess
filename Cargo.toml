@@ -6,9 +6,12 @@ edition = "2021"
 [dev-dependencies]
 criterion = "0.5.1"
 
+
 [[bench]]
-name = "bench"
+name = "attack_bitmask_bench"
 harness = false
+
+
 
 [lib]
 name = "chesslib"

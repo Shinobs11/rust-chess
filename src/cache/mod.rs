@@ -128,18 +128,18 @@ const fn diagonal_mask_cache()->[u64; 128]{
     let mut range_y:[i32; 2] = [i / 8, 7 - (i/8)];
     let mut offsets: [i32; 2] = [-9,  9];
     let mut j = 0;
-    let mut res = (1 << (63 - i));
-    let p_idx = (1 << (63 - i));
+    let mut res = 1 << (63 - i);
+    let p_idx = 1 << (63 - i);
     while j < 2 {
       let range_max = if range_x[j] < range_y[j] {range_x[j]} else {range_y[j]};
       let mut k = 1;
 
       while k <= range_max {
         if offsets[j].is_negative(){
-          res |= (p_idx << (k*offsets[j].abs()));
+          res |= p_idx << (k*offsets[j].abs());
         }
         else {
-          res |= (p_idx >> (k*offsets[j]));
+          res |= p_idx >> (k*offsets[j]);
         }
         k+=1;
       }

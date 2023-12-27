@@ -3,6 +3,8 @@ use crate::chess::attack_bitmask::*;
 use crate::chess::consts::*;
 use crate::chess::types::*;
 
+use super::check::is_king_in_check;
+
 
 
 
@@ -43,16 +45,27 @@ fn make_move(mut board: Board, mov: Move) -> bool{
       Piece::WKnight => knight_attack_mask(piece_mask, board.color_masks[board.turn]),
       Piece::BKnight => knight_attack_mask(piece_mask, board.color_masks[board.turn]),
       Piece::WPawn => pawn_attack_mask(piece_mask, board.color_masks[board.turn] , board.color_masks[!board.turn], board.turn, board.en_pessant_sq),
-      Piece::BPawn => pawn_attack_mask(piece_mask, board.color_masks[board.turn] , board.color_masks[!board.turn], board.turn, board.en_pessant_sq)
+      Piece::BPawn => pawn_attack_mask(piece_mask, board.color_masks[board.turn] , board.color_masks[!board.turn], board.turn, board.en_pessant_sq),
       Piece::Empty => unimplemented!()
     };
 
     let target_mask = 1u64 << (63 - mov.arg2);
+    
     if (target_mask & attack_mask) > 0 {
+
       //here i'm making the move and then checking if the king would be in check as a result
-      //there may be opportunity to optimize here
       board.bbs[mov.piece] = (board.bbs[mov.piece] & !piece_mask) | target_mask;
-      board.bbs[mov.piece]
+      let result = is_king_in_check(board.turn, &board);
+      if result > 0 {
+        board.bbs[mov.piece] = (board.bbs[mov.piece] & !target_mask) | piece_mask;
+        return false;
+      }
+      else {
+        
+        //TODOS: Handle updating opposing color's bitboards
+        //potential optimization: SIMD instructions might be helpful here
+        
+      }
     }
 
 

@@ -1,10 +1,7 @@
 use chesslib::chess::check::*;
 use chesslib::chess::types::*;
 use chesslib::chess::consts::*;
-use std::fs::File;
-use std::io::prelude::*;
-use std::path::Path;
-use chesslib::chess::chess::*;
+use chesslib::chess::util::*;
 
 
 //TODOs: figure out a better way to load test data.
@@ -16,7 +13,8 @@ fn test_is_king_in_check(){
   let boards = parse_fens(&fen_vec);
   let mut res: bool = true;
   for (i, board) in boards.iter().enumerate() {
-    res &= is_king_in_check(Color::from(board.turn), board.to_owned());
+    let x =  is_king_in_check(Color::from(board.turn), &board);
+    res &= x > 0;
     if res == false {
       println!("test_is_king_in_check failed for fen: {}", fen_vec[i]);
       break;

@@ -1,10 +1,7 @@
 use crate::chess::util::san_square_to_index;
 use crate::chess::consts::*;
-use num_enum::FromPrimitive;
 use std::collections::HashSet;
 use std::fmt::Display;
-use std::hash::Hash;
-use std::ascii::*;
 use std::ops::{Index, IndexMut};
 use bitvec::{prelude::*, view::BitView};
 
@@ -305,7 +302,6 @@ impl ColorMasks {
 pub struct Board {
     pub bbs: BitBoardSet,
     pub color_masks: ColorMasks,
-    pub piece_set: PieceSet,
     pub castle_state: CastlingRights,
     pub en_pessant_sq: u8,
     pub turn: Color, // 0: white, 1: black
@@ -316,41 +312,38 @@ impl Board {
         Board {
             bbs: BitBoardSet::empty_default(),
             color_masks: ColorMasks::empty_default(),
-            piece_set: PieceSet::empty_default(),
             castle_state: CastlingRights::default(),
             en_pessant_sq: 255,
             turn: Color::White,
             draw_count: 0,
         }
     }
-    pub fn get_piece_mask(&self, side: u8) -> u64 {
-        let mut mask: u64 = 0;
-        match side {
-            0 => {
-                for p in WHITE_PIECES {
-                    for p_idx in self.piece_set[p].iter() {
-                        mask |= (1u64 << *p_idx);
-                    }
-                }
-            }
-            1 => {
-                for p in BLACK_PIECES {
-                    for p_idx in self.piece_set[p].iter() {
-                        mask |= (1u64 << *p_idx);
-                    }
-                }
-            }
-            _ => {}
-        }
-        return mask;
-    }
+    // pub fn get_piece_mask(&self, side: Color) -> u64 {
+    //     let mut mask: u64 = 0;
+    //     match side {
+    //         Color::White => {
+    //             for p in WHITE_PIECES {
+    //                 for p_idx in self.piece_set[p].iter() {
+    //                     mask |= 1u64 << *p_idx;
+    //                 }
+    //             }
+    //         }
+    //         Color::Black => {
+    //             for p in BLACK_PIECES {
+    //                 for p_idx in self.piece_set[p].iter() {
+    //                     mask |= 1u64 << *p_idx;
+    //                 }
+    //             }
+    //         }
+    //     }
+    //     return mask;
+    // }
 }
 impl Default for Board {
     fn default() -> Self {
         Board {
             bbs: BitBoardSet::default(),
             color_masks: ColorMasks::default(),
-            piece_set: PieceSet::default(),
             castle_state: CastlingRights::default(),
             en_pessant_sq: 255,
             turn: Color::White,

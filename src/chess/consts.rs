@@ -31,6 +31,12 @@ pub enum GenericPiece {
   #[num_enum(default)]
   Empty = 6
 }
+impl GenericPiece {
+  pub fn to_color(self, color: Color) -> Piece {
+    return Piece::from_primitive(2 * (self as u8) + (color as u8));
+  }
+}
+
 #[derive(IntoPrimitive, FromPrimitive, Clone, Copy, PartialEq, Eq, Debug)]
 #[repr(u8)]
 pub enum Color {

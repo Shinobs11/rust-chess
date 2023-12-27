@@ -7,12 +7,10 @@ use crate::chess::util::*;
 use super::consts::*;
 use super::types::*;
 use super::bit::*;
-/*
-TODOS: there's probably a much better way to determine if a king is in check
-i'm not quite sure what it is, but surely there's a way to determine if a king is in check without
-pretending the king is every piece at once?
-*/
-pub fn is_king_in_check(color: Color, board:Board) -> bool {
+
+/// Returns a bitboard representing pieces that can legally attack the king.
+pub fn is_king_in_check(color: Color, board:&Board) -> u64 {
+
   let king_bb = board.bbs[Piece::from_primitive(color as u8)];
   
   //here we make the bold assumption that there is one king per side.
@@ -69,9 +67,9 @@ pub fn is_king_in_check(color: Color, board:Board) -> bool {
   let o_rook_bb = board.bbs[4 + (!color as u8)];
   let o_queen_bb = board.bbs[2 + (!color as u8)];
 
-  let can_bishop_attack = (bishop_attack_mask & o_bishop_bb) != 0;
-  let can_rook_attack = (rook_attack_mask & o_rook_bb) != 0;
-  let can_queen_attack = (queen_attack_mask & o_queen_bb) != 0;
+  let can_bishop_attack = bishop_attack_mask & o_bishop_bb;
+  let can_rook_attack = rook_attack_mask & o_rook_bb;
+  let can_queen_attack = queen_attack_mask & o_queen_bb;
 
 
   let mut pawn_attack_mask:u64;
@@ -85,11 +83,11 @@ pub fn is_king_in_check(color: Color, board:Board) -> bool {
   }
 
   let o_pawn_bb = board.bbs[10 + (!color as u8)];
-  let can_pawn_attack = (pawn_attack_mask & o_pawn_bb) != 0;
+  let can_pawn_attack = pawn_attack_mask & o_pawn_bb;
 
   
   let o_knight_bb = board.bbs[8 + (!color as u8)];
-  let can_knight_attack = (KNIGHT_CACHE[king_idx as usize] & o_knight_bb) != 0;
+  let can_knight_attack = KNIGHT_CACHE[king_idx as usize] & o_knight_bb;
 
   
 

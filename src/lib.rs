@@ -5,6 +5,9 @@
 #![feature(ascii_char)]
 #![deny(long_running_const_eval)]
 
+#![allow(unused_parens)]
+
+
 pub mod chess;
 
 

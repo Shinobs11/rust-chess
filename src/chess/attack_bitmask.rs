@@ -2,11 +2,9 @@ pub type BitBoard = u64;
 use Which::{First, Second};
 use std::simd::*;
 use bitvec::{prelude::*, view::BitView};
-use std::{ ops::Shl, ops::Shr};
-use std::collections::*;
+use std::{ops::Shl, ops::Shr};
 use crate::chess::consts::*;
 use crate::chess::bit::*;
-use std::collections::HashMap;
 use crate::cache::*;
 
 
@@ -14,8 +12,8 @@ use crate::cache::*;
 fn print_board(b:BitBoard){
   let slice = b.view_bits::<Lsb0>();
 
-  for x in (0..8){
-    for y in (0..8){
+  for x in 0..8 {
+    for y in 0..8 {
       print!("{:3?}", slice[x*8 + y] as u8);
     }
     print!("\n");
