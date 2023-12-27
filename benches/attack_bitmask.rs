@@ -81,10 +81,14 @@ pub fn batch_all_attack_mask(v: &Vec<(u64, u64, u64, GenericPiece)>)-> Vec<u64> 
 }
 
 fn _benchmark(c: &mut Criterion) {
-  
-  fn get_position_masks(path: &str, target_piece: GenericPiece)->Vec<(u64, u64, u64)> {
+  fn get_position_masks(filename: &str, target_piece: GenericPiece)->Vec<(u64, u64, u64)> {
+    let cwd = std::env::current_dir().unwrap();
+    let data_path = cwd.join("benches/data/attack_bitmask");
+    let file_path = format!("{}", data_path.join(filename).display());
+
+
     let mut fen_vec: Vec<String> = vec![];
-    retrieve_fens(path.to_string(), &mut fen_vec);
+    retrieve_fens(file_path.to_string(), &mut fen_vec);
     let boards = parse_fens(&fen_vec);
 
     let mut masks:Vec<(u64, u64, u64)> = Vec::<(u64, u64, u64)>::with_capacity(boards.len());
@@ -101,10 +105,14 @@ fn _benchmark(c: &mut Criterion) {
     }
     return masks;
   }
-  let knight_masks = get_position_masks("/home/shino/chess-datasets/1000-N-positions.fen", GenericPiece::Knight);
-  let bishop_masks = get_position_masks("/home/shino/chess-datasets/1000-B-positions.fen", GenericPiece::Bishop);
-  let rook_masks = get_position_masks("/home/shino/chess-datasets/1000-R-positions.fen", GenericPiece::Rook);
-  let queen_masks = get_position_masks("/home/shino/chess-datasets/1000-Q-positions.fen", GenericPiece::Queen);
+
+  
+
+
+  let knight_masks = get_position_masks("1000-N-positions.fen", GenericPiece::Knight);
+  let bishop_masks = get_position_masks("1000-B-positions.fen", GenericPiece::Bishop);
+  let rook_masks = get_position_masks("1000-R-positions.fen", GenericPiece::Rook);
+  let queen_masks = get_position_masks("1000-Q-positions.fen", GenericPiece::Queen);
   
   let mut combined_masks = Vec::<(u64, u64, u64, GenericPiece)>::new();
   
@@ -170,6 +178,7 @@ fn _benchmark(c: &mut Criterion) {
     }
   }
 
+  
   c.bench_function("batch_knight_attack_mask", |b| b.iter(|| batch_knight_attack_mask(&knight_masks)));
   c.bench_function("batch_bishop_attack_mask", |b| b.iter(|| batch_bishop_attack_mask(&bishop_masks)));
   c.bench_function("batch_rook_attack_mask", |b| b.iter(|| batch_rook_attack_mask(&rook_masks)));
